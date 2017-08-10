@@ -324,7 +324,7 @@ def disable_slash_command():
 				channel=channel,
 				text=disable_message)
 
-			return ""
+			return "You disabled weekly concatenation for this channel."
 		else:
 			return "Weekly concatenation is already disabled for this channel. If you want to enable it, use `/schedule`."
 	else:
