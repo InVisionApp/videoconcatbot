@@ -3,17 +3,16 @@
 The Video Concatenator is a bot for Slack that concatenates all the videos posted in a channel on a weekly basis. It also enables users to manually concatenate videos all the videos from a channel within a specified time range.
 
 ## Instructions for End Users
-Anyone on the InVisionApp Slack team is able to access the Video Concatenator bot. Just invite __@videobot__ to your channel and it will be ready to take requests. Upon joining a channel, Video Concatenator immediately schedules it to receieve a weekly concatenated video at 3 PM PT on Fridays. If you would like to disable automatic weekly videos, use the `/disable` command. The bot will post a message to the channel notifying everyone that you turned off weekly videos. To re-enable weekly videos, use `/schedule`.
+Anyone on the InVisionApp Slack team is able to access the Video Concatenator bot. Just invite __@videobot__ to your channel and it will be ready to take requests. Upon joining a channel, Video Concatenator schedules it to receieve a weekly concatenated video at 3 PM PT on Fridays. If you would like to disable automatic weekly videos, remove __@videobot__ from your channel. Note that this will also prevent you from using manual concatenation until you re-invite the bot.
 
 If you would like to get a direct message every time Video Concatenator finishes its weekly concatenation, go to the Slack channel of interest and type `/subscribe`. You can subscribe to as many channels as you like and will be notified of each one so long as it is scheduled. You can unsubscribe from a channel with `/unsubscribe`.
 
 You can also ask Video Concatenator for a video containing all uploads within a specific date range. (The maximum is three weeks.) Use `/concat [mm-dd-yyyy] [mm-dd-yyyy]` and Video Concatenator will send you a direct message containing the uploads between the two dates given. The process can anywhere from two minutes to upwards of ten. Unfortunately, there is no current way to check the status of your concatenation.
 ### List of Video Concatenator Slack Commands
-* `/schedule` **-Affects everyone in the channel**
-* `/disable` **-Affects everyone in the channel**
-* `/concat [startdate] [enddate]` **-Only affects you**
-* `/subscribe` **-Only affects you**
-* `/unsubscribe` **-Only affects you**
+* `/schedule` -Reenable automatic weekly concatenation
+* `/concat [startdate] [enddate]` -Get a file with a specific range for your own use.
+* `/subscribe` -Get notified of weekly concatenated videos from this channel.
+* `/unsubscribe` -Stop getting notified of weekly videos.
 
 ## Information for Developers
 ### Application Structure

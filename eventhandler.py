@@ -207,6 +207,10 @@ def parse_event():
 
 				# Schedule a weekly concatenation
 				add_channel_to_schedule(channel)
+			elif event.get('type') == 'member_left_channel' and event.get('user') == BOT_ID:
+				# Bot left channel
+				print("Leaving channel {}".format(channel))
+				remove_channel_from_schedule(channel)
 			elif event.get('subtype') == 'file_share' and event.get('user') != BOT_ID:
 				# A file is being uploaded, and it's not from the videobot itself
 				file = event.get('file')
@@ -299,22 +303,16 @@ def schedule_slash_command():
 		channel = data.get('channel_id')
 		user = data.get('user_id')
 
-		if channel not in get_scheduled_channels():
-			add_channel_to_schedule(channel)
-
-			enable_message  = "Weekly concatenation was turned *on* by <@{}>. I'll start concatenating videos every Friday at 3 PM PT. :smile:".format(user)
-			r = slack_bot_client.api_call(
-				'chat.postMessage',
-				channel=channel,
-				text=enable_message)
-
-			return ""
+		if channel in get_scheduled_channels():
+			schedule_weekly(channel)
 		else:
-			return "I'm already concatenating videos every Friday at 3 PM PT. :relaxed:"
+			add_channel_to_schedule(channel)
+		return "I'm concatenating videos every Friday at 3 PM PT."
 	else:
 		return invalid_verification_message
 
-# Respond to a '/cancel' command
+"""
+# Respond to a '/disable' command
 @app.route("/commands/disable", methods=['POST'])
 def disable_slash_command():
 	data = request.values
@@ -336,6 +334,7 @@ def disable_slash_command():
 			return "Weekly concatenation is already disabled for this channel. If you want to enable it, use `/schedule`."
 	else:
 		return invalid_verification_message
+"""
 
 # Respond to a '/subscribe' command
 @app.route("/commands/subscribe", methods=['POST'])
@@ -371,6 +370,7 @@ def unsubscribe_slash_command():
 	else:
 		return invalid_verification_message
 
+# This function can be used for debugging. It forces a weekly concatenation job
 @app.route("/commands/channeltest", methods=["POST"])
 def demo_channel():
 	data = request.values
