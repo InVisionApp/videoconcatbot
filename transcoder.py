@@ -4,8 +4,6 @@
 from __future__ import print_function
 from slackclient import SlackClient
 
-import pprint
-
 import glob
 import json
 import os
@@ -159,6 +157,7 @@ class SlackInterfacer(object):
 
 		return vidInfo
 
+	# Sends a video file to a users's DMs
 	def send_video_to_user(self, user, concatFilePath, originalMetadata):
 		print("UPLOADING: " + concatFilePath)
 		count = len(originalMetadata['saved_videos'])
@@ -189,7 +188,7 @@ class SlackInterfacer(object):
 				print("problem with uploading {}".format(concatFilePath))
 
 	# Posts the appropriate message to the slack channel
-	def post_video_to_channel(self, channel, concatFilePath, originalMetadata):
+	def post_video(self, concatFilePath, originalMetadata):
 		print("POSTING: " + concatFilePath)
 
 		videos = originalMetadata['saved_videos']
@@ -197,7 +196,7 @@ class SlackInterfacer(object):
 
 		if count >= 2:
 			# Upload the file
-			result = self.upload_file_to_slack(concatFilePath, channel)
+			result = self.upload_file_to_slack(concatFilePath, self.channel)
 			uploadedFileID = result[0]
 			uploadedFileLink = result[1]
 			if uploadedFileID:
@@ -228,12 +227,16 @@ class SlackInterfacer(object):
 			for vid in videos:
 				loneUploader = vid['user']
 
-			soloVidMessage = "<@{}> posted the only demo video this week!\n{}".format(loneUploader, vid['url'])
-			self.slack_bot_client.api_call("chat.postMessage", channel=channel, text=soloVidMessage)
-		else:
-			noVidMessage = "There were no demo videos posted this week. :speak_no_evil:"
-			self.slack_bot_client.api_call("chat.postMessage", channel=channel, text=noVidMessage)
+			soloURL = vid['url']
+			soloVidMessage = "<@{}> posted the only demo video this week!\n{}".format(loneUploader, soloURL)
+			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=soloVidMessage)
 
+			self.notify_subscribers(soloURL)
+		else:
+			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
+			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=noVidMessage)
+
+			self.notify_subscribers()
 		# Provide links to files that weren't concatenated
 		unaccepted = originalMetadata['unaccepted']
 		if len(unaccepted) > 0:
@@ -242,9 +245,11 @@ class SlackInterfacer(object):
 			for file in unaccepted:
 				admitFaultMessage += "<@{}> {}\n".format(file['user'], file['url'])
 
-			self.slack_bot_client.api_call("chat.postMessage", channel=channel, text=admitFaultMessage)
+			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=admitFaultMessage)
 
 	# Uses the Slack API to upload a concatenated video file to given channel
+	# channel is an argument here because scheduled videos are sent to the original channel 
+	# while manual ones are sent to users
 	def upload_file_to_slack(self, file, channel):
 
 		my_file = {'file' : (file, open(file, 'rb'), 'mp4')}
@@ -289,14 +294,21 @@ class SlackInterfacer(object):
 		cur.close()	
 		return subs
 
-	def notify_subscribers(self, url):
+	def notify_subscribers(self, url="null"):
 		print("Notifying subscribers")
 		subscribers = self.get_subscribers()
 		print("subs are {}".format(subscribers))
 
-		notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}>\n{}!".format(self.channel, url)
-		for sub in subscribers:
-			self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)
+		if url == "null":
+			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
+			for sub in subscribers:
+				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=noVidMessage)
+		else:
+			notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}>\n{}!".format(self.channel, url)
+			for sub in subscribers:
+				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)			
+
+#******************************************************************************#
 
 class AWSConcatenatorError(Exception):
 	pass
@@ -363,8 +375,8 @@ class AWSConcatenator(object):
 		self.out_bucket = None
 		self.role = None
 
-		# How often should we look at the local FS for updates?
-		self.poll_interval = poll_interval # seconds
+		# How often to look at S3 for a concatenated file
+		self.poll_interval = 10 # seconds
 
 		self.s3 = boto3.resource('s3',
 			aws_access_key_id=self.AWS_ACCESS_KEY,
@@ -402,11 +414,7 @@ class AWSConcatenator(object):
 			os.makedirs(self.concatenated_directory)
 
 	def ensure_aws_setup(self):
-		"""
-		Ensures that the AWS services, resources, and policies are set
-		up so that they can all talk to one another and so that we
-		can transcode media files.
-		"""
+		# Ensures that the AWS services are set up
 		if self.bucket_exists(self.in_bucket_name):
 			self.in_bucket = self.s3.Bucket(self.in_bucket_name)
 		else:
@@ -461,15 +469,13 @@ class AWSConcatenator(object):
 				print("Downloaded {0}".format(destination_path))
 				return destination_path
 			except:
-				time.sleep(10)
+				time.sleep(self.poll_interval)
 				pass
 
 	# The boto-specific methods.
 	def bucket_exists(self, bucket_name):
-		"""
-		Returns ``True`` if a bucket exists and you have access to
-		call ``HeadBucket`` on it, otherwise ``False``.
-		"""
+		# Returns ``True`` if a bucket exists and you have access to
+		# call ``HeadBucket`` on it, otherwise ``False``.
 		try:
 			self.s3.meta.client.head_bucket(Bucket=bucket_name)
 			return True
@@ -494,6 +500,9 @@ class AWSConcatenator(object):
 		return role
 
 	def get_pipeline(self):
+		# Get or create a pipeline. When creating, it is configured
+		# with the previously set up S3 buckets and IAM role.
+		# Returns its ID.
 		paginator = self.transcoder.get_paginator('list_pipelines')
 		for page in paginator.paginate():
 			for pipeline in page['Pipelines']:
@@ -505,13 +514,7 @@ class AWSConcatenator(object):
 			InputBucket=self.in_bucket_name,
 			OutputBucket=self.out_bucket_name,
 			Role=self.role.arn,
-			Notifications={
-				'Progressing': '',
-				'Completed': self.topic_arn,
-				'Warning': '',
-				'Error': ''	
-			})
-			#TODO: more robust error reporting and notifications
+		)
 
 		return response['Pipeline']['Id']
 
@@ -590,6 +593,9 @@ class AWSConcatenator(object):
 		# Delete concatenated file from AWS
 		s3.delete_object(Bucket = 'videobotoutput', Key = concat_file)
 
+
+#******************************************************************************#
+
 # run_process is used in queues from eventhandler.py
 def run_process(request):
 	# Setup
@@ -615,7 +621,7 @@ def run_process(request):
 
 	# If videos were downloaded, upload them to AWS for processing
 	files_found = concatenator.check_unconcatenated_local()
-	print("Found {} file(s).".format(len(files_found)))
+	print("Found {} file(s) to process.".format(len(files_found)))
 
 	uploaded = concatenator.start_uploading(files_found)
 	key = concatenator.start_concat(uploaded)
@@ -627,7 +633,7 @@ def run_process(request):
 	if user:
 		slack.send_video_to_user(user, downloadLoc, channelFileData)
 	else:
-		slack.post_video_to_channel(channel, downloadLoc, channelFileData)
+		slack.post_video(downloadLoc, channelFileData)
 	
 	if key and uploaded:
 		# Delete videos from aws
