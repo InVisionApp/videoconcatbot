@@ -1,3 +1,6 @@
+# InVision Video Concatenator
+# eventhandler.py
+
 import os
 import time
 import random

@@ -1,3 +1,6 @@
+# InVision Video Concatenator
+# transcoder.py
+
 from __future__ import print_function
 from slackclient import SlackClient
 
