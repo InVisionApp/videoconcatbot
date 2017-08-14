@@ -47,6 +47,7 @@ class SlackInterfacer(object):
 		super(SlackInterfacer, self).__init__()
 		self.BOT_ID = self.getBotID()
 		self.channel = channel
+		self.channel_name = name_of_channel(channel)
 		self.unique_id = unique_id
 
 		# Local directory for saving original videos files downloaded from Slack
@@ -72,6 +73,28 @@ class SlackInterfacer(object):
 		else:
 			print("could not find bot user with the name " + bot_name)
 			return False
+
+	def name_of_channel(channel):
+		api_call = self.slack_bot_client.api_call(
+			'channels.info',
+			channel=channel
+		)
+		if api_call.get('ok'):
+			name = api_call['channel']['name']
+			return name
+		else:
+			# This could be a private channel
+			api_call = self.slack_bot_client.api_call(
+				'groups.info',
+				channel=channel
+			)
+			if api_call.get('ok'):
+				name = api_call['group']['name']
+				return name
+			else:
+				print(api_call['error'] + channel)
+
+			print(api_call['error'] + channel)
 
 	def download_slack_videos(self, searchStartTime, searchEndTime):
 		# Send a slack request to get all the files shared during the last week
@@ -168,8 +191,8 @@ class SlackInterfacer(object):
 			if uploadedFileID:
 				# If successful upload, add comment
 				videos = originalMetadata['saved_videos']
-				shareMessage = """I hope you got some :popcorn: ready because here are the videos you requested from <#{}>!
-				There are {} demos included. Original uploaders were""".format(self.channel, len(videos))
+				shareMessage = """I hope you got some :popcorn: ready because here are the videos you requested from <#{}|{}>!
+				There are {} demos included. Original uploaders were""".format(self.channel, self.channel_name, len(videos))
 				
 				# Add usernames of everyone involved
 				# Use a set to avoid duplicates
@@ -304,7 +327,7 @@ class SlackInterfacer(object):
 			for sub in subscribers:
 				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=noVidMessage)
 		else:
-			notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}>\n{}!".format(self.channel, url)
+			notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}|{}>\n{}!".format(self.channel, self.channel_name, url)
 			for sub in subscribers:
 				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)			
 

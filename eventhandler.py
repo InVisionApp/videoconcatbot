@@ -408,8 +408,8 @@ def name_of_channel(channel):
 		channel=channel
 	)
 	if api_call.get('ok'):
-		channelName = api_call['channel']['name']
-		return channelName
+		name = api_call['channel']['name']
+		return name
 	else:
 		# This could be a private channel
 		api_call = slack_bot_client.api_call(
@@ -417,8 +417,8 @@ def name_of_channel(channel):
 			channel=channel
 		)
 		if api_call.get('ok'):
-			groupName = api_call['group']['name']
-			return groupName
+			name = api_call['group']['name']
+			return name
 		else:
 			print(api_call['error'] + channel)
 
