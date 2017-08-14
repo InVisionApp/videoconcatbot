@@ -409,7 +409,7 @@ def list_slash_command():
 
 		response = "The following channels are scheduled for weekly concatenation:\n"
 		for chan in channels:
-			response += " <#{}>"
+			response += " <#{}>".format(chan)
 		return response
 	else:
 		return invalid_verification_message
