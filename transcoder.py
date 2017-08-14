@@ -451,8 +451,8 @@ class AWSConcatenator(object):
 		else:
 			self.role = self.setup_iam_role()
 
-		self.topic_arn = self.get_sns_topic()
-		self.queue = self.get_sqs_queue()
+		# self.topic_arn = self.get_sns_topic()
+		# self.queue = self.get_sqs_queue()
 
 		self.pipeline_id = self.get_pipeline()
 	
@@ -528,54 +528,54 @@ class AWSConcatenator(object):
 		return role
 
 
-	def get_sns_topic(self):
-		"""
-		Get or create the SNS topic.
-		"""
-		# Creating a topic is idempotent, so if it already exists
-		# then we will just get the topic returned.
-		return self.sns.create_topic(Name=self.topic_name).arn
+	# def get_sns_topic(self):
+	# 	"""
+	# 	Get or create the SNS topic.
+	# 	"""
+	# 	# Creating a topic is idempotent, so if it already exists
+	# 	# then we will just get the topic returned.
+	# 	return self.sns.create_topic(Name=self.topic_name).arn
 
-	def get_sqs_queue(self):
-		"""
-		Get or create the SQS queue. If it is created, then it is
-		also subscribed to the SNS topic, and a policy is set to allow
-		the SNS topic to send messages to the queue.
-		"""
-		# Creating a queue is idempotent, so if it already exists
-		# then we will just get the queue returned.
-		queue = self.sqs.create_queue(QueueName=self.queue_name)
-		self.queue_arn = queue.attributes['QueueArn']
+	# def get_sqs_queue(self):
+	# 	"""
+	# 	Get or create the SQS queue. If it is created, then it is
+	# 	also subscribed to the SNS topic, and a policy is set to allow
+	# 	the SNS topic to send messages to the queue.
+	# 	"""
+	# 	# Creating a queue is idempotent, so if it already exists
+	# 	# then we will just get the queue returned.
+	# 	queue = self.sqs.create_queue(QueueName=self.queue_name)
+	# 	self.queue_arn = queue.attributes['QueueArn']
 
-		# Ensure that we are subscribed to the SNS topic
-		subscribed = False
-		topic = self.sns.Topic(self.topic_arn)
-		for subscription in topic.subscriptions.all():
-			if subscription.attributes['Endpoint'] == self.queue_arn:
-				subscribed = True
-				break
+	# 	# Ensure that we are subscribed to the SNS topic
+	# 	subscribed = False
+	# 	topic = self.sns.Topic(self.topic_arn)
+	# 	for subscription in topic.subscriptions.all():
+	# 		if subscription.attributes['Endpoint'] == self.queue_arn:
+	# 			subscribed = True
+	# 			break
 
-		if not subscribed:
-			topic.subscribe(Protocol='sqs', Endpoint=self.queue_arn)
+	# 	if not subscribed:
+	# 		topic.subscribe(Protocol='sqs', Endpoint=self.queue_arn)
 
-		# Set up a policy to allow SNS access to the queue
-		if 'Policy' in queue.attributes:
-			policy = json.loads(queue.attributes['Policy'])
-		else:
-			policy = {'Version': '2008-10-17'}
+	# 	# Set up a policy to allow SNS access to the queue
+	# 	if 'Policy' in queue.attributes:
+	# 		policy = json.loads(queue.attributes['Policy'])
+	# 	else:
+	# 		policy = {'Version': '2008-10-17'}
 
-		if 'Statement' not in policy:
-			statement = self.queue_policy_statement
-			statement['Resource'] = self.queue_arn
-			statement['Condition']['StringLike']['aws:SourceArn'] = \
-				self.topic_arn
-			policy['Statement'] = [statement]
+	# 	if 'Statement' not in policy:
+	# 		statement = self.queue_policy_statement
+	# 		statement['Resource'] = self.queue_arn
+	# 		statement['Condition']['StringLike']['aws:SourceArn'] = \
+	# 			self.topic_arn
+	# 		policy['Statement'] = [statement]
 
-			queue.set_attributes(Attributes={
-				'Policy': json.dumps(policy)
-			})
+	# 		queue.set_attributes(Attributes={
+	# 			'Policy': json.dumps(policy)
+	# 		})
 
-		return queue
+	# 	return queue
 
 	def get_pipeline(self):
 		"""
@@ -645,32 +645,32 @@ class AWSConcatenator(object):
 		else:
 			return
 
-	def check_queue(self):
+	# def check_queue(self):
 
-		queue = self.queue
-		to_fetch = []
+	# 	queue = self.queue
+	# 	to_fetch = []
 
-		for msg in queue.receive_messages(WaitTimeSeconds=self.poll_interval):
-		    body = json.loads(msg.body)
+	# 	for msg in queue.receive_messages(WaitTimeSeconds=self.poll_interval):
+	# 	    body = json.loads(msg.body)
 
-		    message = body.get('Message', '{}')
-		    outputs = json.loads(message).get('outputs', [])
+	# 	    message = body.get('Message', '{}')
+	# 	    outputs = json.loads(message).get('outputs', [])
 
-		    if not len(outputs):
-		        print("Saw no output in {0}".format(body))
-		        continue
+	# 	    if not len(outputs):
+	# 	        print("Saw no output in {0}".format(body))
+	# 	        continue
 
-		    key = outputs[0].get('key')
+	# 	    key = outputs[0].get('key')
 
-		    if not key:
-		        print("Saw no key in outputs in {0}".format(body))
-		        continue
+	# 	    if not key:
+	# 	        print("Saw no key in outputs in {0}".format(body))
+	# 	        continue
 
-		    to_fetch.append(key)
-		    print("Completed {0}".format(key))
-		    msg.delete()
+	# 	    to_fetch.append(key)
+	# 	    print("Completed {0}".format(key))
+	# 	    msg.delete()
 
-		return to_fetch
+	# 	return to_fetch
 
 
 	def download_from_s3(self, s3_file):
@@ -736,13 +736,6 @@ def run_process(request):
 
 	uploaded = concatenator.start_uploading(files_found)
 	key = concatenator.start_concat(uploaded)
-
-	##TODO: use the queue to check for vids to download
-	results = concatenator.check_queue()
-	# print('unused results:')
-	# pp = pprint.PrettyPrinter(indent=4)
-	# pp.pprint(results)
-	##
 
 	downloadLoc = ""
 	if key:
