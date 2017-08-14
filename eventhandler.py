@@ -396,7 +396,7 @@ def list_slash_command():
 		response = "The following channels are scheduled for weekly concatenation:\n"
 		for ch in allChannels:
 			channelName = name_of_channel(ch)
-			response += "<#{}|{}>".format(ch, channelName)
+			response += " <#{}|{}>".format(ch, channelName)
 
 		return response
 	else:
