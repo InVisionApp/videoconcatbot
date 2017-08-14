@@ -327,32 +327,6 @@ class AWSConcatenator(object):
 				],
 				'Resource': '*'
 			},
-			{
-				'Effect': 'Allow',
-				'Action': [
-					'sns:*',
-				],
-				'Resource': '*',
-			},
-			{
-				'Effect': 'Allow',
-				'Action': [
-					'sqs:*',
-				],
-				'Resource': '*',
-			},
-			{
-				'Effect': 'Deny',
-				'Action': [
-					's3:*Policy*',
-					'sns:*Permission*',
-					'sns:*Delete*',
-					'sqs:*Delete*',
-					's3:*Delete*',
-					'sns:*Remove*'
-				],
-				'Resource':'*'
-			},
 		]
 	}
 
@@ -383,18 +357,14 @@ class AWSConcatenator(object):
 		self.queue_name = 'concat'
 		self.pipeline_name = 'concat-pipe'
 		self.region_name = 'us-west-2'
-		self.role_arn = None
-		self.topic_arn = None
-		self.queue_arn = None
 		self.pipeline_id = None
 
 		self.in_bucket = None
 		self.out_bucket = None
 		self.role = None
-		self.queue = None
 
 		# How often should we look at the local FS for updates?
-		self.poll_interval = 10 # seconds
+		self.poll_interval = poll_interval # seconds
 
 		self.s3 = boto3.resource('s3',
 			aws_access_key_id=self.AWS_ACCESS_KEY,
@@ -453,9 +423,6 @@ class AWSConcatenator(object):
 			self.role = self.iam.Role(self.role_name)
 		else:
 			self.role = self.setup_iam_role()
-
-		# self.topic_arn = self.get_sns_topic()
-		# self.queue = self.get_sqs_queue()
 
 		self.pipeline_id = self.get_pipeline()
 	
@@ -519,10 +486,6 @@ class AWSConcatenator(object):
 			return None
 
 	def setup_iam_role(self):
-		"""
-		Set up a new IAM role and set its policy to allow Elastic
-		Transcoder access to S3 and SNS. Returns the role.
-		"""
 		role = self.iam.create_role(
 			RoleName=self.role_name,
 			AssumeRolePolicyDocument=json.dumps(self.basic_role_policy))
@@ -530,62 +493,7 @@ class AWSConcatenator(object):
 			PolicyDocument=json.dumps(self.more_permissions_policy))
 		return role
 
-
-	# def get_sns_topic(self):
-	# 	"""
-	# 	Get or create the SNS topic.
-	# 	"""
-	# 	# Creating a topic is idempotent, so if it already exists
-	# 	# then we will just get the topic returned.
-	# 	return self.sns.create_topic(Name=self.topic_name).arn
-
-	# def get_sqs_queue(self):
-	# 	"""
-	# 	Get or create the SQS queue. If it is created, then it is
-	# 	also subscribed to the SNS topic, and a policy is set to allow
-	# 	the SNS topic to send messages to the queue.
-	# 	"""
-	# 	# Creating a queue is idempotent, so if it already exists
-	# 	# then we will just get the queue returned.
-	# 	queue = self.sqs.create_queue(QueueName=self.queue_name)
-	# 	self.queue_arn = queue.attributes['QueueArn']
-
-	# 	# Ensure that we are subscribed to the SNS topic
-	# 	subscribed = False
-	# 	topic = self.sns.Topic(self.topic_arn)
-	# 	for subscription in topic.subscriptions.all():
-	# 		if subscription.attributes['Endpoint'] == self.queue_arn:
-	# 			subscribed = True
-	# 			break
-
-	# 	if not subscribed:
-	# 		topic.subscribe(Protocol='sqs', Endpoint=self.queue_arn)
-
-	# 	# Set up a policy to allow SNS access to the queue
-	# 	if 'Policy' in queue.attributes:
-	# 		policy = json.loads(queue.attributes['Policy'])
-	# 	else:
-	# 		policy = {'Version': '2008-10-17'}
-
-	# 	if 'Statement' not in policy:
-	# 		statement = self.queue_policy_statement
-	# 		statement['Resource'] = self.queue_arn
-	# 		statement['Condition']['StringLike']['aws:SourceArn'] = \
-	# 			self.topic_arn
-	# 		policy['Statement'] = [statement]
-
-	# 		queue.set_attributes(Attributes={
-	# 			'Policy': json.dumps(policy)
-	# 		})
-
-	# 	return queue
-
 	def get_pipeline(self):
-		"""
-		Get or create a pipeline. When creating, it is configured
-		with the previously set up S3 buckets, SNS topic, and IAM
-		role. Returns its ID.
-		"""
 		paginator = self.transcoder.get_paginator('list_pipelines')
 		for page in paginator.paginate():
 			for pipeline in page['Pipelines']:
@@ -647,34 +555,6 @@ class AWSConcatenator(object):
 			return outputkey
 		else:
 			return
-
-	# def check_queue(self):
-
-	# 	queue = self.queue
-	# 	to_fetch = []
-
-	# 	for msg in queue.receive_messages(WaitTimeSeconds=self.poll_interval):
-	# 	    body = json.loads(msg.body)
-
-	# 	    message = body.get('Message', '{}')
-	# 	    outputs = json.loads(message).get('outputs', [])
-
-	# 	    if not len(outputs):
-	# 	        print("Saw no output in {0}".format(body))
-	# 	        continue
-
-	# 	    key = outputs[0].get('key')
-
-	# 	    if not key:
-	# 	        print("Saw no key in outputs in {0}".format(body))
-	# 	        continue
-
-	# 	    to_fetch.append(key)
-	# 	    print("Completed {0}".format(key))
-	# 	    msg.delete()
-
-	# 	return to_fetch
-
 
 	def download_from_s3(self, s3_file):
 		# Download a file from the S3 output bucket to your hard drive.
