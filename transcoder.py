@@ -296,14 +296,14 @@ class SlackInterfacer(object):
 		subscribers = self.get_subscribers()
 		print("subs are {}".format(subscribers))
 
-		if url != "null":
-			notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}>\n{}!".format(self.channel, url)
-			for sub in subscribers:
-				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)
-		else:
+		if url == "null":
 			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
 			for sub in subscribers:
-				self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=noVidMessage)
+				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=noVidMessage)
+		else:
+			notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}>\n{}!".format(self.channel, url)
+			for sub in subscribers:
+				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)			
 
 #******************************************************************************#
 
