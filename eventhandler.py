@@ -395,19 +395,35 @@ def list_slash_command():
 		allChannels = get_scheduled_channels()
 		response = "The following channels are scheduled for weekly concatenation:\n"
 		for ch in allChannels:
-			api_call = slack_bot_client.api_call(
-				'channels.info',
-				channel=ch
-			)
-			if api_call.get('ok'):
-				channelName = api_call['channel']['name']
-				response += " #{}".format(channelName)
-			else:
-				print(api_call)
+			channelName = name_of_channel(ch)
+			response += "<#{}|{}>".format(ch, channelName)
 
 		return response
 	else:
 		return invalid_verification_message
+
+def name_of_channel(channel):
+	api_call = slack_bot_client.api_call(
+		'channels.info',
+		channel=channel
+	)
+	if api_call.get('ok'):
+		channelName = api_call['channel']['name']
+		return channelName
+	else:
+		# This could be a private channel
+		api_call = slack_bot_client.api_call(
+			'groups.info',
+			channel=channel
+		)
+		if api_call.get('ok'):
+			groupName = api_call['group']['name']
+			return groupName
+		else:
+			print(api_call['error'] + channel)
+
+		print(api_call['error'] + channel)
+
 
 @app.route("/commands/channeltest", methods=["POST"])
 def demo_channel():
