@@ -637,7 +637,7 @@ class AWSConcatenator(object):
 				Inputs=inputs,
 				Outputs=[{
 					'Key': outputkey,
-					'PresetId': '1501189304995-pzpxlm' # custom
+					'PresetId': '1502739903620-sszgrv' # custom preset with padding
 				}]
 			)
 			print("Started concatenating {}".format(files))			
