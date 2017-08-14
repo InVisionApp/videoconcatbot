@@ -233,6 +233,7 @@ class SlackInterfacer(object):
 			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
 			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=noVidMessage)
 
+			self.notify_subscribers()
 		# Provide links to files that weren't concatenated
 		unaccepted = originalMetadata['unaccepted']
 		if len(unaccepted) > 0:
