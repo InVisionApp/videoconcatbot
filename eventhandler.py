@@ -36,8 +36,6 @@ ACCEPTABLE_FILE_TYPES = ['mp4', 'mov', 'mpg', 'webm']
 emojiReactions = ['thumbsup', 'raised_hands', 'clap', 'ok_hand']
 
 # Credentials
-AWS_ACCESS_KEY = os.environ['AWS_ACCESS_KEY']
-AWS_SECRET_KEY = os.environ['AWS_SECRET_KEY']
 SLACK_VERIFICATION_TOKEN = os.environ["SLACK_VERIFICATION_TOKEN"]
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
 SLACK_APP_TOKEN = os.environ["SLACK_APP_TOKEN"]
@@ -47,6 +45,36 @@ slack_bot_client = SlackClient(SLACK_BOT_TOKEN)
 invalid_verification_message = "Error: Invalid Slack Authentication."
 
 app = Flask(__name__)
+
+def get_botID():
+	bot_name = 'videobot'
+
+	# Get the bot's identifier from Slack. This is used to ignore file uploads by the bot
+	api_call = slack_bot_client.api_call("users.list")
+	if api_call.get('ok'):
+	# retrieve all users so we can find our bot
+		users = api_call.get('members')
+		for user in users:
+			if 'name' in user and user.get('name') == bot_name:
+				ID = user.get('id')
+				print("Bot ID for '" + user['name'] + "' is " + ID)
+				return ID
+	else:
+		print("could not find bot user with the name " + bot_name)
+		return False
+
+def name_of_channel(channel):
+	api_call = slack_bot_client.api_call("channels.list")
+	if api_call.get('ok'):
+		channels = api_call.get('channels')
+		for ch in channels:
+			if channel == ch.get('id'):
+				name = ch.get('name')
+				print("name of {} is {}".format(channel, name))
+				return channel
+	else:
+		print("could not find channel {}".format(channel))
+		return False
 
 ### Accessing scheduled channels with SQL
 def get_scheduled_channels():
@@ -168,20 +196,23 @@ def starter():
 
 	schedule_current_channels()
 
-	bot_name = 'videobot'
+	global BOT_ID
+	BOT_ID = get_botID()
 
-	# Get the bot's identifier from Slack. This is used to ignore file uploads by the bot
-	api_call = slack_bot_client.api_call("users.list")
-	if api_call.get('ok'):
-	# retrieve all users so we can find our bot
-		users = api_call.get('members')
-		for user in users:
-			if 'name' in user and user.get('name') == bot_name:
-				global BOT_ID
-				BOT_ID = user.get('id')
-				print("Bot ID for '" + user['name'] + "' is " + BOT_ID)
-	else:
-		print("could not find bot user with the name " + bot_name)
+	# bot_name = 'videobot'
+
+	# # Get the bot's identifier from Slack. This is used to ignore file uploads by the bot
+	# api_call = slack_bot_client.api_call("users.list")
+	# if api_call.get('ok'):
+	# # retrieve all users so we can find our bot
+	# 	users = api_call.get('members')
+	# 	for user in users:
+	# 		if 'name' in user and user.get('name') == bot_name:
+	# 			global BOT_ID
+	# 			BOT_ID = user.get('id')
+	# 			print("Bot ID for '" + user['name'] + "' is " + BOT_ID)
+	# else:
+	# 	print("could not find bot user with the name " + bot_name)
 
 	# Create a new thread to run the scheduling loop
 	threading.Thread(target=schedule_loop).start()
@@ -364,6 +395,22 @@ def unsubscribe_slash_command():
 			return "Ok, you will no longer receive messages when I post to this channel."
 		else:
 			return "You are not subscribed to this channel. If you want to subscribe, use `/subscribe`"
+	else:
+		return invalid_verification_message
+
+# Respond to a '/list' command
+@app.route("/commands/list", methods=['POST'])
+def list_slash_command():
+	data = request.values
+	if data.get('token') == SLACK_VERIFICATION_TOKEN:
+		channel = data.get('channel_id')
+
+		channels = get_scheduled_channels()
+
+		response = "The following channels are scheduled for weekly concatenation:\n"
+		for chan in channels:
+			response += " <#{}>"
+		return response
 	else:
 		return invalid_verification_message
 
