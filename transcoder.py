@@ -303,7 +303,7 @@ class SlackInterfacer(object):
 		else:
 			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
 			for sub in subscribers:
-				self.slack_bot_client.api_call("chat.postMessage", channel=channel, text=noVidMessage)
+				self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=noVidMessage)
 
 #******************************************************************************#
 
