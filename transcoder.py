@@ -1,8 +1,6 @@
 from __future__ import print_function
 from slackclient import SlackClient
 
-import pprint
-
 import glob
 import json
 import os
@@ -156,6 +154,7 @@ class SlackInterfacer(object):
 
 		return vidInfo
 
+	# Sends a video file to a users's DMs
 	def send_video_to_user(self, user, concatFilePath, originalMetadata):
 		print("UPLOADING: " + concatFilePath)
 		count = len(originalMetadata['saved_videos'])
@@ -186,7 +185,7 @@ class SlackInterfacer(object):
 				print("problem with uploading {}".format(concatFilePath))
 
 	# Posts the appropriate message to the slack channel
-	def post_video_to_channel(self, channel, concatFilePath, originalMetadata):
+	def post_video(self, concatFilePath, originalMetadata):
 		print("POSTING: " + concatFilePath)
 
 		videos = originalMetadata['saved_videos']
@@ -194,7 +193,7 @@ class SlackInterfacer(object):
 
 		if count >= 2:
 			# Upload the file
-			result = self.upload_file_to_slack(concatFilePath, channel)
+			result = self.upload_file_to_slack(concatFilePath, self.channel)
 			uploadedFileID = result[0]
 			uploadedFileLink = result[1]
 			if uploadedFileID:
@@ -225,11 +224,14 @@ class SlackInterfacer(object):
 			for vid in videos:
 				loneUploader = vid['user']
 
-			soloVidMessage = "<@{}> posted the only demo video this week!\n{}".format(loneUploader, vid['url'])
-			self.slack_bot_client.api_call("chat.postMessage", channel=channel, text=soloVidMessage)
+			soloURL = vid['url']
+			soloVidMessage = "<@{}> posted the only demo video this week!\n{}".format(loneUploader, soloURL)
+			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=soloVidMessage)
+
+			self.notify_subscribers(soloURL)
 		else:
-			noVidMessage = "There were no demo videos posted this week. :speak_no_evil:"
-			self.slack_bot_client.api_call("chat.postMessage", channel=channel, text=noVidMessage)
+			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
+			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=noVidMessage)
 
 		# Provide links to files that weren't concatenated
 		unaccepted = originalMetadata['unaccepted']
@@ -239,9 +241,11 @@ class SlackInterfacer(object):
 			for file in unaccepted:
 				admitFaultMessage += "<@{}> {}\n".format(file['user'], file['url'])
 
-			self.slack_bot_client.api_call("chat.postMessage", channel=channel, text=admitFaultMessage)
+			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=admitFaultMessage)
 
 	# Uses the Slack API to upload a concatenated video file to given channel
+	# channel is an argument here because scheduled videos are sent to the original channel 
+	# while manual ones are sent to users
 	def upload_file_to_slack(self, file, channel):
 
 		my_file = {'file' : (file, open(file, 'rb'), 'mp4')}
@@ -286,14 +290,21 @@ class SlackInterfacer(object):
 		cur.close()	
 		return subs
 
-	def notify_subscribers(self, url):
+	def notify_subscribers(self, url="null"):
 		print("Notifying subscribers")
 		subscribers = self.get_subscribers()
 		print("subs are {}".format(subscribers))
 
-		notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}>\n{}!".format(self.channel, url)
-		for sub in subscribers:
-			self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)
+		if url != "null":
+			notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}>\n{}!".format(self.channel, url)
+			for sub in subscribers:
+				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)
+		else:
+			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
+			for sub in subscribers:
+				self.slack_bot_client.api_call("chat.postMessage", channel=channel, text=noVidMessage)
+
+#******************************************************************************#
 
 class AWSConcatenatorError(Exception):
 	pass
@@ -323,32 +334,6 @@ class AWSConcatenator(object):
 					's3:*MultipartUpload*'
 				],
 				'Resource': '*'
-			},
-			{
-				'Effect': 'Allow',
-				'Action': [
-					'sns:*',
-				],
-				'Resource': '*',
-			},
-			{
-				'Effect': 'Allow',
-				'Action': [
-					'sqs:*',
-				],
-				'Resource': '*',
-			},
-			{
-				'Effect': 'Deny',
-				'Action': [
-					's3:*Policy*',
-					'sns:*Permission*',
-					'sns:*Delete*',
-					'sqs:*Delete*',
-					's3:*Delete*',
-					'sns:*Remove*'
-				],
-				'Resource':'*'
 			},
 		]
 	}
@@ -380,17 +365,13 @@ class AWSConcatenator(object):
 		self.queue_name = 'concat'
 		self.pipeline_name = 'concat-pipe'
 		self.region_name = 'us-west-2'
-		self.role_arn = None
-		self.topic_arn = None
-		self.queue_arn = None
 		self.pipeline_id = None
 
 		self.in_bucket = None
 		self.out_bucket = None
 		self.role = None
-		self.queue = None
 
-		# How often should we look at the local FS for updates?
+		# How often to look at S3 for a concatenated file
 		self.poll_interval = 10 # seconds
 
 		self.s3 = boto3.resource('s3',
@@ -429,11 +410,7 @@ class AWSConcatenator(object):
 			os.makedirs(self.concatenated_directory)
 
 	def ensure_aws_setup(self):
-		"""
-		Ensures that the AWS services, resources, and policies are set
-		up so that they can all talk to one another and so that we
-		can transcode media files.
-		"""
+		# Ensures that the AWS services are set up
 		if self.bucket_exists(self.in_bucket_name):
 			self.in_bucket = self.s3.Bucket(self.in_bucket_name)
 		else:
@@ -450,9 +427,6 @@ class AWSConcatenator(object):
 			self.role = self.iam.Role(self.role_name)
 		else:
 			self.role = self.setup_iam_role()
-
-		# self.topic_arn = self.get_sns_topic()
-		# self.queue = self.get_sqs_queue()
 
 		self.pipeline_id = self.get_pipeline()
 	
@@ -491,15 +465,13 @@ class AWSConcatenator(object):
 				print("Downloaded {0}".format(destination_path))
 				return destination_path
 			except:
-				time.sleep(10)
+				time.sleep(self.poll_interval)
 				pass
 
 	# The boto-specific methods.
 	def bucket_exists(self, bucket_name):
-		"""
-		Returns ``True`` if a bucket exists and you have access to
-		call ``HeadBucket`` on it, otherwise ``False``.
-		"""
+		# Returns ``True`` if a bucket exists and you have access to
+		# call ``HeadBucket`` on it, otherwise ``False``.
 		try:
 			self.s3.meta.client.head_bucket(Bucket=bucket_name)
 			return True
@@ -516,10 +488,8 @@ class AWSConcatenator(object):
 			return None
 
 	def setup_iam_role(self):
-		"""
-		Set up a new IAM role and set its policy to allow Elastic
-		Transcoder access to S3 and SNS. Returns the role.
-		"""
+		# Set up a new IAM role and set its policy to allow Elastic
+		# Transcoder access to S3 and SNS. Returns the role.
 		role = self.iam.create_role(
 			RoleName=self.role_name,
 			AssumeRolePolicyDocument=json.dumps(self.basic_role_policy))
@@ -527,62 +497,10 @@ class AWSConcatenator(object):
 			PolicyDocument=json.dumps(self.more_permissions_policy))
 		return role
 
-
-	# def get_sns_topic(self):
-	# 	"""
-	# 	Get or create the SNS topic.
-	# 	"""
-	# 	# Creating a topic is idempotent, so if it already exists
-	# 	# then we will just get the topic returned.
-	# 	return self.sns.create_topic(Name=self.topic_name).arn
-
-	# def get_sqs_queue(self):
-	# 	"""
-	# 	Get or create the SQS queue. If it is created, then it is
-	# 	also subscribed to the SNS topic, and a policy is set to allow
-	# 	the SNS topic to send messages to the queue.
-	# 	"""
-	# 	# Creating a queue is idempotent, so if it already exists
-	# 	# then we will just get the queue returned.
-	# 	queue = self.sqs.create_queue(QueueName=self.queue_name)
-	# 	self.queue_arn = queue.attributes['QueueArn']
-
-	# 	# Ensure that we are subscribed to the SNS topic
-	# 	subscribed = False
-	# 	topic = self.sns.Topic(self.topic_arn)
-	# 	for subscription in topic.subscriptions.all():
-	# 		if subscription.attributes['Endpoint'] == self.queue_arn:
-	# 			subscribed = True
-	# 			break
-
-	# 	if not subscribed:
-	# 		topic.subscribe(Protocol='sqs', Endpoint=self.queue_arn)
-
-	# 	# Set up a policy to allow SNS access to the queue
-	# 	if 'Policy' in queue.attributes:
-	# 		policy = json.loads(queue.attributes['Policy'])
-	# 	else:
-	# 		policy = {'Version': '2008-10-17'}
-
-	# 	if 'Statement' not in policy:
-	# 		statement = self.queue_policy_statement
-	# 		statement['Resource'] = self.queue_arn
-	# 		statement['Condition']['StringLike']['aws:SourceArn'] = \
-	# 			self.topic_arn
-	# 		policy['Statement'] = [statement]
-
-	# 		queue.set_attributes(Attributes={
-	# 			'Policy': json.dumps(policy)
-	# 		})
-
-	# 	return queue
-
 	def get_pipeline(self):
-		"""
-		Get or create a pipeline. When creating, it is configured
-		with the previously set up S3 buckets, SNS topic, and IAM
-		role. Returns its ID.
-		"""
+		# Get or create a pipeline. When creating, it is configured
+		# with the previously set up S3 buckets and IAM role.
+		# Returns its ID.
 		paginator = self.transcoder.get_paginator('list_pipelines')
 		for page in paginator.paginate():
 			for pipeline in page['Pipelines']:
@@ -594,13 +512,7 @@ class AWSConcatenator(object):
 			InputBucket=self.in_bucket_name,
 			OutputBucket=self.out_bucket_name,
 			Role=self.role.arn,
-			Notifications={
-				'Progressing': '',
-				'Completed': self.topic_arn,
-				'Warning': '',
-				'Error': ''	
-			})
-			#TODO: more robust error reporting and notifications
+		)
 
 		return response['Pipeline']['Id']
 
@@ -645,34 +557,6 @@ class AWSConcatenator(object):
 		else:
 			return
 
-	# def check_queue(self):
-
-	# 	queue = self.queue
-	# 	to_fetch = []
-
-	# 	for msg in queue.receive_messages(WaitTimeSeconds=self.poll_interval):
-	# 	    body = json.loads(msg.body)
-
-	# 	    message = body.get('Message', '{}')
-	# 	    outputs = json.loads(message).get('outputs', [])
-
-	# 	    if not len(outputs):
-	# 	        print("Saw no output in {0}".format(body))
-	# 	        continue
-
-	# 	    key = outputs[0].get('key')
-
-	# 	    if not key:
-	# 	        print("Saw no key in outputs in {0}".format(body))
-	# 	        continue
-
-	# 	    to_fetch.append(key)
-	# 	    print("Completed {0}".format(key))
-	# 	    msg.delete()
-
-	# 	return to_fetch
-
-
 	def download_from_s3(self, s3_file):
 		# Download a file from the S3 output bucket to your hard drive.
 
@@ -707,6 +591,9 @@ class AWSConcatenator(object):
 		# Delete concatenated file from AWS
 		s3.delete_object(Bucket = 'videobotoutput', Key = concat_file)
 
+
+#******************************************************************************#
+
 # run_process is used in queues from eventhandler.py
 def run_process(request):
 	# Setup
@@ -732,7 +619,7 @@ def run_process(request):
 
 	# If videos were downloaded, upload them to AWS for processing
 	files_found = concatenator.check_unconcatenated_local()
-	print("Found {} file(s).".format(len(files_found)))
+	print("Found {} file(s) to process.".format(len(files_found)))
 
 	uploaded = concatenator.start_uploading(files_found)
 	key = concatenator.start_concat(uploaded)
@@ -744,7 +631,7 @@ def run_process(request):
 	if user:
 		slack.send_video_to_user(user, downloadLoc, channelFileData)
 	else:
-		slack.post_video_to_channel(channel, downloadLoc, channelFileData)
+		slack.post_video(downloadLoc, channelFileData)
 	
 	if key and uploaded:
 		# Delete videos from aws
