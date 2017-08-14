@@ -63,19 +63,6 @@ def get_botID():
 		print("could not find bot user with the name " + bot_name)
 		return False
 
-def name_of_channel(channel):
-	api_call = slack_bot_client.api_call("channels.list")
-	if api_call.get('ok'):
-		channels = api_call.get('channels')
-		for ch in channels:
-			if channel == ch.get('id'):
-				name = ch.get('name')
-				print("name of {} is {}".format(channel, name))
-				return channel
-	else:
-		print("could not find channel {}".format(channel))
-		return False
-
 ### Accessing scheduled channels with SQL
 def get_scheduled_channels():
 	# Open a cursor to perform Postgres database operations
@@ -234,7 +221,7 @@ def parse_event():
 			if event.get('type') == 'member_joined_channel' and event.get('user') == BOT_ID:
 				# The bot joined a channel; post an introduction
 				introduction = "Hello! I'll concatenate videos every Friday at 3 PM PT :clapper:"
-				r = slack_bot_client.api_call(
+				api_call = slack_bot_client.api_call(
 					'chat.postMessage',
 					channel=channel,
 					text=introduction)
@@ -251,12 +238,12 @@ def parse_event():
 				else:
 					reaction = 'confused'
 
-				r = slack_bot_client.api_call(
+				api_call = slack_bot_client.api_call(
 					'reactions.add',
 					name=reaction,
 					file=file['id']
 				)
-				if r.get('ok'):
+				if api_call.get('ok'):
 					print("Reaction :{}: added to {}".format(reaction, file['name']))
 				else:
 					print("Error while adding reaction :{}: to {}".format(reaction, file['name']))
@@ -353,7 +340,7 @@ def disable_slash_command():
 			remove_channel_from_schedule(channel)
 
 			disable_message = "Weekly concatenation was turned *off* by <@{}> . You can re-enable it with `/schedule`".format(user)
-			r = slack_bot_client.api_call(
+			api_call = slack_bot_client.api_call(
 				'chat.postMessage',
 				channel=channel,
 				text=disable_message)
@@ -405,11 +392,19 @@ def list_slash_command():
 	if data.get('token') == SLACK_VERIFICATION_TOKEN:
 		channel = data.get('channel_id')
 
-		channels = get_scheduled_channels()
-
+		allChannels = get_scheduled_channels()
 		response = "The following channels are scheduled for weekly concatenation:\n"
-		for chan in channels:
-			response += " <#{}>".format(chan)
+		for ch in allChannels:
+			api_call = slack_bot_client.api_call(
+				'channels.info',
+				channel=ch
+			)
+			if api_call.get('ok'):
+				channelName = api_call['channel']['name']
+				response += " #{}".format(channelName)
+			else:
+				print(api_call)
+
 		return response
 	else:
 		return invalid_verification_message
