@@ -11,6 +11,7 @@ You can also ask Video Concatenator for a video containing all uploads within a 
 ### List of Video Concatenator Slack Commands
 * `/schedule` -Reenable automatic weekly concatenation
 * `/disable` -Disable automatic weekly concatenation. (**This affects everyone in the channel**)
+* `/list` - Returns a list of all the channels scheduled for weekly concatenation.
 * `/concat [startdate] [enddate]` -Get a file with a specific range for your own use.
 * `/subscribe` -Get notified of weekly concatenated videos from this channel.
 * `/unsubscribe` -Stop getting notified of weekly videos.
