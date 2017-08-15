@@ -154,7 +154,7 @@ def unsubscribe(subscriber, channel):
 def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
 	schedule.clear(tag)
-	schedule.every().friday.at("22:00").do(weekly_process, channel).tag(tag) # Hour 22:00 UTC is 16:00/3:00PM PST
+	schedule.every().friday.at("20:00").do(weekly_process, channel).tag(tag) # Hour 20:00 UTC is 13:00/1:00PM PST
 
 def weekly_process(channel):
 	print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
@@ -186,21 +186,6 @@ def starter():
 	global BOT_ID
 	BOT_ID = get_botID()
 
-	# bot_name = 'videobot'
-
-	# # Get the bot's identifier from Slack. This is used to ignore file uploads by the bot
-	# api_call = slack_bot_client.api_call("users.list")
-	# if api_call.get('ok'):
-	# # retrieve all users so we can find our bot
-	# 	users = api_call.get('members')
-	# 	for user in users:
-	# 		if 'name' in user and user.get('name') == bot_name:
-	# 			global BOT_ID
-	# 			BOT_ID = user.get('id')
-	# 			print("Bot ID for '" + user['name'] + "' is " + BOT_ID)
-	# else:
-	# 	print("could not find bot user with the name " + bot_name)
-
 	# Create a new thread to run the scheduling loop
 	threading.Thread(target=schedule_loop).start()
 
@@ -220,7 +205,7 @@ def parse_event():
 			# Respond to Slack Events
 			if event.get('type') == 'member_joined_channel' and event.get('user') == BOT_ID:
 				# The bot joined a channel; post an introduction
-				introduction = "Hello! I'll concatenate videos every Friday at 3 PM PT :clapper:"
+				introduction = "Hello! I'll concatenate videos every Friday at 1 PM PT :clapper:"
 				api_call = slack_bot_client.api_call(
 					'chat.postMessage',
 					channel=channel,
@@ -322,9 +307,9 @@ def schedule_slash_command():
 
 		if channel not in get_scheduled_channels():
 			add_channel_to_schedule(channel)
-			return "Great! I'll start concatenating videos every Friday at 3 PM PT. :smile:"
+			return "Great! I'll start concatenating videos every Friday at 1 PM PT. :smile:"
 		else:
-			return "I'm already concatenating videos every Friday at 3 PM PT. :relaxed:"
+			return "I'm already concatenating videos every Friday at 1 PM PT. :relaxed:"
 	else:
 		return invalid_verification_message
 
