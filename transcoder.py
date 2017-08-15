@@ -47,7 +47,7 @@ class SlackInterfacer(object):
 		super(SlackInterfacer, self).__init__()
 		self.BOT_ID = self.getBotID()
 		self.channel = channel
-		self.channel_name = name_of_channel(channel)
+		self.channel_name = self.name_of_channel(channel)
 		self.unique_id = unique_id
 
 		# Local directory for saving original videos files downloaded from Slack
@@ -74,7 +74,7 @@ class SlackInterfacer(object):
 			print("could not find bot user with the name " + bot_name)
 			return False
 
-	def name_of_channel(channel):
+	def name_of_channel(self, channel):
 		api_call = self.slack_bot_client.api_call(
 			'channels.info',
 			channel=channel
@@ -274,12 +274,15 @@ class SlackInterfacer(object):
 	# channel is an argument here because scheduled videos are sent to the original channel 
 	# while manual ones are sent to users
 	def upload_file_to_slack(self, file, channel):
-
 		my_file = {'file' : (file, open(file, 'rb'), 'mp4')}
 		uploadDate = time.strftime("%m.%d.%Y")
 
+		# get the name of the origin channel
+		sourceChannel = self.name_of_channel(self.channel)
+		filename = "Concatenated Demos - #{} - {}.mp4".format(sourceChannel, uploadDate)
+
 		payload={
-		  "filename": "Concatenated Demos - {}.mp4".format(uploadDate),
+		  "filename": filename,
 		  "token": self.SLACK_BOT_TOKEN,
 		  "channels": channel,
 		}
@@ -544,7 +547,6 @@ class AWSConcatenator(object):
 	def upload_to_s3(self, file_path):
 		# Upload a file to the S3 input file bucket.
 		filename = os.path.basename(file_path)
-		# destination = '{}/{}'.format(self.channel, filename)
 		destination = self.s3_destination_path + filename
 		with open(file_path, 'rb') as data:
 			self.in_bucket.Object(destination).put(Body=data)
@@ -555,6 +557,7 @@ class AWSConcatenator(object):
 	def start_concat(self, files):
 		if files:
 			inputs = []
+
 			now = dt.datetime.now().strftime("%B %d, %Y %I-%M%p")
 			name = 'Concatenated Demos - {}.mp4'.format(now)
 			outputkey = '{}/{}'.format(self.channel, name)
