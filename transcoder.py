@@ -256,7 +256,7 @@ class SlackInterfacer(object):
 
 			self.notify_subscribers(soloURL)
 		else:
-			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
+			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.channel, self.channel_name)
 			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=noVidMessage)
 
 			self.notify_subscribers()
@@ -326,7 +326,7 @@ class SlackInterfacer(object):
 		print("subs are {}".format(subscribers))
 
 		if url == "null":
-			noVidMessage = "There were no demo videos posted this week in <#{}>. :speak_no_evil:".format(self.channel)
+			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.channel, self.channel_name)
 			for sub in subscribers:
 				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=noVidMessage)
 		else:
@@ -647,10 +647,15 @@ def run_process(request):
 
 	# If videos were downloaded, upload them to AWS for processing
 	files_found = concatenator.check_unconcatenated_local()
-	print("Found {} file(s) to process.".format(len(files_found)))
+	count = len(files_found)
+	print("Found {} file(s) to process.".format(count))
 
-	uploaded = concatenator.start_uploading(files_found)
-	key = concatenator.start_concat(uploaded)
+	# Only send videos to AWS if there is more than one
+	key = False
+	uploaded = False
+	if count > 1:
+		uploaded = concatenator.start_uploading(files_found)
+		key = concatenator.start_concat(uploaded)
 
 	downloadLoc = ""
 	if key:
