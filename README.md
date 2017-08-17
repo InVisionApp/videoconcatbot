@@ -17,6 +17,9 @@ You can also ask Video Concatenator for a video containing all uploads within a 
 * `/unsubscribe` -Stop getting notified of weekly videos.
 
 ## Information for Developers
+
+Application approved by security on 8/17/2016 by Jeremy Mount.
+
 ### Application Structure
 The application is composed of three Python files,
 * `eventhandler.py`
