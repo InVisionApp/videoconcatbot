@@ -653,7 +653,7 @@ def run_process(request):
 	# Only send videos to AWS if there is more than one
 	key = False
 	uploaded = False
-	if count > 1:
+	if count >= 1:
 		uploaded = concatenator.start_uploading(files_found)
 		key = concatenator.start_concat(uploaded)
 
