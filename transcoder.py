@@ -185,7 +185,7 @@ class SlackInterfacer(object):
 		print("UPLOADING: " + concatFilePath)
 		count = len(originalMetadata['saved_videos'])
 
-		if count >= 2:
+		if count >= 1:
 			# Upload the file
 			uploadedFileID = self.upload_file_to_slack(concatFilePath, user)[0]
 			if uploadedFileID:
