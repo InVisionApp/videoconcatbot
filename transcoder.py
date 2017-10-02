@@ -107,7 +107,7 @@ class SlackInterfacer(object):
 		)
 		if api_call.get('ok'):
 			files = api_call.get('files')
-            print("Found {} files for channel {}", len(files), self.channel)
+			print("Found {} files for channel {}", len(files), self.channel)
 
 			videos = []
 			unaccepted = []
