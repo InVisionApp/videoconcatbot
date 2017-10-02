@@ -151,7 +151,7 @@ class SlackInterfacer(object):
 			# Download the file
 			print("Downloading to {} from {}".format(filePath, url))
 			with open(filePath, 'wb') as file:
-				for chunk in r.iter_content(chunk_size=1024): 
+				for chunk in r.iter_content(chunk_size=1024):
 					if chunk: # filter out keep-alive new chunks
 						file.write(chunk)
 
@@ -202,7 +202,7 @@ class SlackInterfacer(object):
 				videos = originalMetadata['saved_videos']
 				shareMessage = """I hope you got some :popcorn: ready because here are the videos you requested from <#{}|{}>!
 				There are {} demos included. Original uploaders were""".format(self.channel, self.channel_name, len(videos))
-				
+
 				# Add usernames of everyone involved
 				# Use a set to avoid duplicates
 				usernames = set()
@@ -280,7 +280,7 @@ class SlackInterfacer(object):
 			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=admitFaultMessage)
 
 	# Uses the Slack API to upload a concatenated video file to given channel
-	# channel is an argument here because scheduled videos are sent to the original channel 
+	# channel is an argument here because scheduled videos are sent to the original channel
 	# while manual ones are sent to users
 	def upload_file_to_slack(self, file, channel):
 		my_file = {'file' : (file, open(file, 'rb'), 'mp4')}
@@ -326,7 +326,7 @@ class SlackInterfacer(object):
 		for tple in cur.fetchall():
 			subs.append(tple[0])
 
-		cur.close()	
+		cur.close()
 		return subs
 
 	def notify_subscribers(self, url="null"):
@@ -341,7 +341,7 @@ class SlackInterfacer(object):
 		else:
 			notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}|{}>\n{}!".format(self.channel, self.channel_name, url)
 			for sub in subscribers:
-				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)			
+				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)
 
 #******************************************************************************#
 
@@ -468,7 +468,7 @@ class AWSConcatenator(object):
 			self.role = self.setup_iam_role()
 
 		self.pipeline_id = self.get_pipeline()
-	
+
 	def check_unconcatenated_local(self):
 		temp = os.listdir(self.unconcatenated_directory)
 		files = []
@@ -589,7 +589,7 @@ class AWSConcatenator(object):
 					'PresetId': '1502739903620-sszgrv' # custom preset with padding
 				}]
 			)
-			print("Started concatenating {}".format(files))			
+			print("Started concatenating {}".format(files))
 			return outputkey
 		else:
 			return
@@ -674,7 +674,7 @@ def run_process(request):
 		slack.send_video_to_user(user, downloadLoc, channelFileData)
 	else:
 		slack.post_video(downloadLoc, channelFileData)
-	
+
 	if key and uploaded:
 		# Delete videos from aws
 		concatenator.delete_from_s3(uploaded, key)
