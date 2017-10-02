@@ -176,7 +176,12 @@ class SlackInterfacer(object):
 			'accepted': False
 		}
 		# Delete the file so it isn't sent to AWS
-		os.remove(filePath)
+		try:
+			os.remove(filePath)
+		except IOError as e:
+			print("Exception {} while trying to remove file {}".format(e, filePath))
+		except:
+			print("Unexpected error!")
 
 		return vidInfo
 
