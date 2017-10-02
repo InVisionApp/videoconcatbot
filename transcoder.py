@@ -105,8 +105,11 @@ class SlackInterfacer(object):
 			ts_from=searchStartTime,
 			ts_to=searchEndTime
 		)
+		print("API Call. Channel={} ts_from={} ts_to={}".format(self.channel, searchStartTime, searchEndTime))
+
 		if api_call.get('ok'):
 			files = api_call.get('files')
+			print("API Result: {}".format(api_call))
 			print("Found {} files for channel {}".format(len(files), self.channel))
 
 			videos = []
