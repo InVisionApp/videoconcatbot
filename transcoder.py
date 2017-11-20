@@ -130,7 +130,8 @@ class SlackInterfacer(object):
 			}
 			return fileData
 		else:
-			return "Yikes! There was an error requesting this batch of files: " + r.get('error')
+			print("API Result: {}".format(api_call))
+			return "Yikes! There was an error requesting this batch of files: " + api_call.get('error')
 
 	def download_source_file(self, slack_file_object):
 		localName = "{}.{}".format(slack_file_object['created'], slack_file_object['name'].split('.')[-1]) # name the files as <timestamp>.<extension>
