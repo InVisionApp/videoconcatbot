@@ -299,7 +299,7 @@ class SlackInterfacer(object):
 		}
 
                 m = MultipartEncoder({
-                    fields: { 'file' : (file, open(file, 'rb'), 'mp4') }
+                    'fields': { 'file' : (file, open(file, 'rb'), 'mp4') }
                     })
 
                 r = requests.post("https://slack.com/api/files.upload", params = payload, data = m, headers = {'Content-Type': m.content_type})
