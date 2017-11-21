@@ -292,15 +292,15 @@ class SlackInterfacer(object):
 		sourceChannel = self.name_of_channel(self.channel)
 		filename = "Concatenated Demos - #{} - {}.mp4".format(sourceChannel, uploadDate)
 
-		# payload={
-		  # "filename": filename,
-		  # "token": self.SLACK_BOT_TOKEN,
-		  # "channels": channel,
-		# }
+		payload = {
+		  "filename": filename,
+		  "token": self.SLACK_BOT_TOKEN,
+		  "channels": channel,
+		}
 
                 m = MultipartEncoder({
-                    'files': {'file' : (file, open(file, 'rb'), 'mp4')}
-                    });
+                    fields: { 'file' : (file, open(file, 'rb'), 'mp4') }
+                    })
 
                 r = requests.post("https://slack.com/api/files.upload", params = payload, data = m, headers = {'Content-Type': m.content_type})
 		if r.json()["ok"] == True:
