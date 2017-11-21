@@ -300,14 +300,14 @@ class SlackInterfacer(object):
 		}
                 """
 
-                m = MultipartEncoder({
+                m = MultipartEncoder(
                     fields = {
-                        "filename": filename,
-                        "token": self.SLACK_BOT_TOKEN,
-                        "channels": channel,
+                        'filename': filename,
+                        'token': self.SLACK_BOT_TOKEN,
+                        'channels': channel,
                         'file' : (file, open(file, 'rb'), 'mp4')
                         }
-                    })
+                    )
 
                 r = requests.post("https://slack.com/api/files.upload", params = payload, data = m, headers = {'Content-Type': m.content_type})
 		if r.json()["ok"] == True:
