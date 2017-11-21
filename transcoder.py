@@ -301,11 +301,11 @@ class SlackInterfacer(object):
                 """
 
                 m = MultipartEncoder({
-                    'fields': {
+                    'fields'= {
                         "filename": filename,
                         "token": self.SLACK_BOT_TOKEN,
                         "channels": channel,
-                        'file' : open(file, 'rb')
+                        'file' : (file, open(file, 'rb'), 'mp4')
                         }
                     })
 
