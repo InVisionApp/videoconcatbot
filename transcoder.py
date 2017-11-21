@@ -285,20 +285,10 @@ class SlackInterfacer(object):
 	# channel is an argument here because scheduled videos are sent to the original channel
 	# while manual ones are sent to users
 	def upload_file_to_slack(self, file, channel):
-		# my_file = {'file' : (file, open(file, 'rb'), 'mp4')}
-
 		# get the name of the origin channel
 		uploadDate = time.strftime("%m.%d.%Y")
 		sourceChannel = self.name_of_channel(self.channel)
 		filename = "Concatenated Demos - #{} - {}.mp4".format(sourceChannel, uploadDate)
-
-                """
-		payload = {
-		  "filename": filename,
-		  "token": self.SLACK_BOT_TOKEN,
-		  "channels": channel,
-		}
-                """
 
                 m = MultipartEncoder(
                     fields = {
