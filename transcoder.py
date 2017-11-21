@@ -12,6 +12,7 @@ import requests
 import boto3
 import botocore
 from botocore.client import ClientError
+from requests_toolbelt.multipart import MultipartEncoder
 import time
 import datetime as dt
 import psycopg2
@@ -284,20 +285,24 @@ class SlackInterfacer(object):
 	# channel is an argument here because scheduled videos are sent to the original channel
 	# while manual ones are sent to users
 	def upload_file_to_slack(self, file, channel):
-		my_file = {'file' : (file, open(file, 'rb'), 'mp4')}
-		uploadDate = time.strftime("%m.%d.%Y")
+		# my_file = {'file' : (file, open(file, 'rb'), 'mp4')}
 
 		# get the name of the origin channel
+		uploadDate = time.strftime("%m.%d.%Y")
 		sourceChannel = self.name_of_channel(self.channel)
 		filename = "Concatenated Demos - #{} - {}.mp4".format(sourceChannel, uploadDate)
 
-		payload={
-		  "filename": filename,
-		  "token": self.SLACK_BOT_TOKEN,
-		  "channels": channel,
-		}
+		# payload={
+		  # "filename": filename,
+		  # "token": self.SLACK_BOT_TOKEN,
+		  # "channels": channel,
+		# }
 
-		r = requests.post("https://slack.com/api/files.upload", params = payload, files = my_file)
+                m = MultipartEncoder({
+                    'files': {'file' : (file, open(file, 'rb'), 'mp4')}
+                    });
+
+                r = requests.post("https://slack.com/api/files.upload", params = payload, data = m, headers = {'Content-Type': m.content_type})
 		if r.json()["ok"] == True:
 			print("Successful upload of {}".format(file))
 
