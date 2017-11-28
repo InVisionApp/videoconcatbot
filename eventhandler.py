@@ -195,7 +195,7 @@ def starter():
 
 @app.route("/run-schedule", methods=['GET'])
 def weekly_process():
-        channel = 'G7BGP74LR' # vidbot-devs channel
+        channel = request.args.get('channel')
 	print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
 
 	now = int(time.time())

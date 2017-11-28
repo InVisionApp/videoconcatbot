@@ -300,6 +300,7 @@ class SlackInterfacer(object):
                     )
 
                 r = requests.post("https://slack.com/api/files.upload", data = m, headers = {'Content-Type': m.content_type})
+                print("{}", r)
 		if r.json()["ok"] == True:
 			print("Successful upload of {}".format(file))
 
