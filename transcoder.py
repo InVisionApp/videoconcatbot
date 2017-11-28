@@ -300,24 +300,23 @@ class SlackInterfacer(object):
                     )
 
                 r = requests.post("https://slack.com/api/files.upload", data = m, headers = {'Content-Type': m.content_type})
-                print("{}", r)
-		if r.json()["ok"] == True:
-			print("Successful upload of {}".format(file))
+                if ( r.status_code == 200 ):
+                    print("Successful upload of {}".format(file))
 
-			# Concatenated file was uploaded. Delete video stored locally
-			shutil.rmtree(self.orig_dir)
-			os.makedirs(self.orig_dir)
+                    # Concatenated file was uploaded. Delete video stored locally
+                    shutil.rmtree(self.orig_dir)
+                    os.makedirs(self.orig_dir)
 
-			# Delete the concatenated file stored locally
-			os.remove(file)
+                    # Delete the concatenated file stored locally
+                    os.remove(file)
 
-			id_and_link = [r.json()['file']['id'], r.json()['file']['url_private']]
+                    id_and_link = [r.json()['file']['id'], r.json()['file']['url_private']]
 
-			# return the id of the uploaded file so the bot can drop a comment on it
-			return id_and_link
-		else:
-			print(r)
-			return False
+                    # return the id of the uploaded file so the bot can drop a comment on it
+                    return id_and_link
+                else:
+                    print("Failed uploading file to slack {}", r)
+		    return False
 
 	def get_subscribers(self):
 		# Open a cursor to perform Postgres database operations
