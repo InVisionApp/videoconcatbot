@@ -192,6 +192,19 @@ def starter():
 	# Create a new thread to run the scheduling loop
 	threading.Thread(target=schedule_loop).start()
 
+
+@app.route("/run-schedule", methods=['GET'])
+def weekly_process():
+        channel = 'vidbot-devs'
+	print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
+
+	now = int(time.time())
+	weeklyTask = {
+		'channel':channel,
+		'start':now-604800 # 1 week ago
+	}
+	createQueue(weeklyTask)
+
 @app.route("/slack/events", methods=['GET', 'POST'])
 def parse_event():
 	data = request.get_json()
