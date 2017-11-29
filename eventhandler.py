@@ -154,10 +154,7 @@ def unsubscribe(subscriber, channel):
 def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
 	schedule.clear(tag)
-        if channel == 'vidbot-devs':
-	    schedule.every().tuesday.at("22:10").do(weekly_process, channel).tag(tag) # Hour 20:00 UTC is 13:00/1:00PM PST
-        else:
-	    schedule.every().friday.at("20:00").do(weekly_process, channel).tag(tag) # Hour 20:00 UTC is 13:00/1:00PM PST
+        schedule.every().friday.at("20:00").do(weekly_process, channel).tag(tag) # Hour 20:00 UTC is 13:00/1:00PM PST
 
 def weekly_process(channel):
 	print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
