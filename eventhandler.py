@@ -154,7 +154,7 @@ def unsubscribe(subscriber, channel):
 def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
 	schedule.clear(tag)
-        schedule.every().friday.at("20:00").do(weekly_process, channel).tag(tag) # Hour 20:00 UTC is 13:00/1:00PM PST
+        schedule.every().friday.at("21:00").do(weekly_process, channel).tag(tag) # Hour 20:00 UTC is 13:00/1:00PM PST
 
 def weekly_process(channel):
 	print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
