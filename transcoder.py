@@ -50,7 +50,7 @@ class SlackInterfacer(object):
 		self.channel = channel
 		self.channel_name = self.name_of_channel(channel)
 		self.unique_id = unique_id
-                self.is_manual_request = manual_request
+		self.is_manual_request = manual_request
 
 		# Local directory for saving original videos files downloaded from Slack
 		self.orig_dir = "demo_videos/{}/{}/originals/".format(channel, unique_id)
@@ -337,14 +337,14 @@ class SlackInterfacer(object):
 		return subs
 
         def update_last_execution(channel, is_manual_request):
-            if is_manual_request:
-                return
-            cur = sql_conn.cursor()
-            current_date = datetime.date.today().strftime( "%m-%d-%Y")
-            print("Creating execution record for %s on %s".format(channel, current_date))
-            cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s)", channel, current_date)
-            sql_conn.commit()
-            cur.close()
+	    if is_manual_request:
+		return
+	    cur = sql_conn.cursor()
+	    current_date = datetime.date.today().strftime( "%m-%d-%Y")
+	    print("Creating execution record for %s on %s".format(channel, current_date))
+	    cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s)", channel, current_date)
+	    sql_conn.commit()
+	    cur.close()
 
 	def notify_subscribers(self, url="null"):
 		print("Notifying subscribers")
@@ -655,7 +655,7 @@ def run_process(request):
 	user = request.get('user')
 	searchStartTime = request.get('start')
 	searchEndTime = request.get('end')
-        manualRequest = request.get('manual_request')
+	manualRequest = request.get('manual_request')
 
 	# Create a unique UUID for this job.
 	# This is used for file management to
