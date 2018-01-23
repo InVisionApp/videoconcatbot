@@ -229,8 +229,8 @@ class SlackInterfacer(object):
 		videos = originalMetadata['saved_videos']
 		count = len(videos)
 
-                # Update last execution date
-                self.update_last_execution(self.channel, self.is_manual_request)
+		# Update last execution date
+		self.update_last_execution(self.channel, self.is_manual_request)
 
 		if count >= 2:
 			# Upload the file
