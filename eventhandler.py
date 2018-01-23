@@ -63,6 +63,16 @@ def get_botID():
 		print("could not find bot user with the name " + bot_name)
 		return False
 
+def get_last_execution(channel):
+    cur = sql_conn.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS concat_executions (channel_id TEXT, exec_date DATE);")
+    cur.execute("SELECT MAX(exec_date) FROM concat_executions WHERE channel_id=%s;", [channel])
+    row = cur.fetchone()
+    cur.close()
+    if row is not None:
+        return row[0]
+    return None
+
 ### Accessing scheduled channels with SQL
 def get_scheduled_channels():
 	# Open a cursor to perform Postgres database operations
@@ -157,12 +167,17 @@ def schedule_weekly(channel):
         schedule.every().friday.at("21:00").do(weekly_process, channel).tag(tag) # Hour 20:00 UTC is 13:00/1:00PM PST
 
 def weekly_process(channel):
-	print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
+    print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
+    start_time = get_last_execution(channel)
+    if start_time is None:
+        now = int(time.time())
+        start_time = now-604800 # 1 week ago
+    else:
+        start_time = time.mktime(dt.datetime.strptime(start_time, "%m-%d-%Y").timetuple())
 
-	now = int(time.time())
 	weeklyTask = {
 		'channel':channel,
-		'start':now-604800 # 1 week ago
+		'start': start_time
 	}
 	createQueue(weeklyTask)
 
@@ -192,15 +207,9 @@ def starter():
 
 @app.route("/run-schedule", methods=['GET'])
 def weekly_process_rest():
-        channel = request.args.get('channel')
-	print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
-
-	now = int(time.time())
-	weeklyTask = {
-		'channel':channel,
-		'start':now-604800 # 1 week ago
-	}
-	createQueue(weeklyTask)
+    channel = request.args.get('channel')
+    print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
+    weekly_process(channel)
 
 @app.route("/slack/events", methods=['GET', 'POST'])
 def parse_event():
@@ -302,7 +311,8 @@ def concat_slash_command():
 			'channel':channel,
 			'start':startUnix,
 			'end':endUnix,
-			'user':user
+			'user':user,
+            'manual_request':True
 		}
 		createQueue(concatRequest)
 
