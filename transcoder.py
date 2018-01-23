@@ -336,7 +336,7 @@ class SlackInterfacer(object):
 		cur.close()
 		return subs
 
-        def update_last_execution(channel, is_manual_request):
+	def update_last_execution(channel, is_manual_request):
 	    if is_manual_request:
 		return
 	    cur = sql_conn.cursor()
