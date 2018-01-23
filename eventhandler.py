@@ -312,7 +312,7 @@ def concat_slash_command():
 			'start':startUnix,
 			'end':endUnix,
 			'user':user,
-            'manual_request':True
+			'manual_request':True
 		}
 		createQueue(concatRequest)
 
