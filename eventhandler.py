@@ -175,11 +175,12 @@ def weekly_process(channel):
     else:
         start_time = time.mktime(dt.datetime.strptime(start_time, "%m-%d-%Y").timetuple())
 
-	weeklyTask = {
-		'channel':channel,
-		'start': start_time
-	}
-	createQueue(weeklyTask)
+    weeklyTask = {
+        'channel':channel,
+        'start': start_time
+    }
+    print("weekly task {}".format(weeklyTask))
+    createQueue(weeklyTask)
 
 # Runs an infinite loop to check if it's time to run a scheduled job
 def schedule_loop():
