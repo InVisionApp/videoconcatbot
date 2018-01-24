@@ -234,6 +234,7 @@ class SlackInterfacer(object):
 
 		if count >= 2:
 			# Upload the file
+			print("Uploading concatenated video to slack")
 			result = self.upload_file_to_slack(concatFilePath, self.channel)
 			uploadedFileID = result[0]
 			uploadedFileLink = result[1]
@@ -261,6 +262,7 @@ class SlackInterfacer(object):
 				print("problem with uploading {}".format(concatFilePath))
 		elif count == 1:
 			# Remind people of the one video for the week
+			print("Liking the only video in the channel")
 			loneUploader = ""
 			for vid in videos:
 				loneUploader = vid['user']
