@@ -230,6 +230,7 @@ class SlackInterfacer(object):
 		count = len(videos)
 
 		# Update last execution date
+                print("updating execution for %s %d".format(self.channel, self.is_manual_request))
 		self.update_last_execution(self.channel, self.is_manual_request)
 
 		if count >= 2:
@@ -342,7 +343,7 @@ class SlackInterfacer(object):
 	    cur = sql_conn.cursor()
 	    current_date = datetime.date.today().strftime( "%m-%d-%Y")
 	    print("Creating execution record for %s on %s".format(channel, current_date))
-	    cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s)", channel, current_date)
+	    cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s);", [channel, current_date])
 	    sql_conn.commit()
 	    cur.close()
 
