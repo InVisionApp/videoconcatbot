@@ -345,6 +345,7 @@ class SlackInterfacer(object):
 		cur = sql_conn.cursor()
 		current_date = dt.date.today().strftime( "%m-%d-%Y")
 		print("Creating execution record for %s on %s".format(channel, current_date))
+		cur.execute("CREATE TABLE IF NOT EXISTS concat_executions (channel_id TEXT, exec_date DATE);")
 		cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s);", [channel, current_date])
 		sql_conn.commit()
 		cur.close()
