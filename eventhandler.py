@@ -210,6 +210,7 @@ def weekly_process_rest():
     channel = request.args.get('channel')
     print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
     weekly_process(channel)
+    return ""
 
 @app.route("/slack/events", methods=['GET', 'POST'])
 def parse_event():
