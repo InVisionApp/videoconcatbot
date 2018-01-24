@@ -44,12 +44,13 @@ class SlackInterfacer(object):
 	slack_bot_client = SlackClient(SLACK_BOT_TOKEN)
 	slack_app_client = SlackClient(SLACK_APP_TOKEN) # used to call the 'files.list' command
 
-	def __init__(self, channel, unique_id):
+	def __init__(self, channel, unique_id, manual_request):
 		super(SlackInterfacer, self).__init__()
 		self.BOT_ID = self.getBotID()
 		self.channel = channel
 		self.channel_name = self.name_of_channel(channel)
 		self.unique_id = unique_id
+		self.is_manual_request = manual_request
 
 		# Local directory for saving original videos files downloaded from Slack
 		self.orig_dir = "demo_videos/{}/{}/originals/".format(channel, unique_id)
@@ -228,6 +229,9 @@ class SlackInterfacer(object):
 		videos = originalMetadata['saved_videos']
 		count = len(videos)
 
+		# Update last execution date
+		self.update_last_execution(self.channel, self.is_manual_request)
+
 		if count >= 2:
 			# Upload the file
 			result = self.upload_file_to_slack(concatFilePath, self.channel)
@@ -331,6 +335,16 @@ class SlackInterfacer(object):
 
 		cur.close()
 		return subs
+
+	def update_last_execution(channel, is_manual_request):
+	    if is_manual_request:
+		return
+	    cur = sql_conn.cursor()
+	    current_date = datetime.date.today().strftime( "%m-%d-%Y")
+	    print("Creating execution record for %s on %s".format(channel, current_date))
+	    cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s)", channel, current_date)
+	    sql_conn.commit()
+	    cur.close()
 
 	def notify_subscribers(self, url="null"):
 		print("Notifying subscribers")
@@ -641,6 +655,7 @@ def run_process(request):
 	user = request.get('user')
 	searchStartTime = request.get('start')
 	searchEndTime = request.get('end')
+	manualRequest = request.get('manual_request')
 
 	# Create a unique UUID for this job.
 	# This is used for file management to
@@ -648,7 +663,7 @@ def run_process(request):
 	JOB_ID = uuid.uuid1()
 
 	# Download video files within range from slack
-	slack = SlackInterfacer(channel, JOB_ID)
+	slack = SlackInterfacer(channel, JOB_ID, manualRequest)
 	channelFileData = slack.download_slack_videos(searchStartTime, searchEndTime)
 	savedVideos = channelFileData['saved_videos']
 
