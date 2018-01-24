@@ -343,7 +343,7 @@ class SlackInterfacer(object):
 		if is_manual_request:
 			return
 		cur = sql_conn.cursor()
-		current_date = datetime.date.today().strftime( "%m-%d-%Y")
+		current_date = dt.date.today().strftime( "%m-%d-%Y")
 		print("Creating execution record for %s on %s".format(channel, current_date))
 		cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s);", [channel, current_date])
 		sql_conn.commit()
