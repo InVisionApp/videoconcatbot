@@ -230,8 +230,8 @@ class SlackInterfacer(object):
 		count = len(videos)
 
 		# Update last execution date
-                print("updating execution for %s %d".format(self.channel, self.is_manual_request))
-		self.update_last_execution(self.channel, self.is_manual_request)
+		print("updating execution for %s {}".format(self.channel, self.is_manual_request))
+		self.update_last_execution(self)
 
 		if count >= 2:
 			# Upload the file
@@ -337,7 +337,9 @@ class SlackInterfacer(object):
 		cur.close()
 		return subs
 
-	def update_last_execution(channel, is_manual_request):
+	def update_last_execution(self):
+		channel = self.channel
+		is_manual_request = self.is_manual_request
 	    if is_manual_request:
 		return
 	    cur = sql_conn.cursor()
