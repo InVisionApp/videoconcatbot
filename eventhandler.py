@@ -173,7 +173,8 @@ def weekly_process(channel):
         now = int(time.time())
         start_time = now-604800 # 1 week ago
     else:
-        start_time = time.mktime(dt.datetime.strptime(start_time, "%m-%d-%Y").timetuple())
+        print("Start time from DB: {}".format(start_time))
+        start_time = time.mktime(start_time.timetuple())
 
     weeklyTask = {
         'channel':channel,
