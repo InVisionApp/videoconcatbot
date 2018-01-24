@@ -231,7 +231,7 @@ class SlackInterfacer(object):
 
 		# Update last execution date
 		print("updating execution for %s {}".format(self.channel, self.is_manual_request))
-		self.update_last_execution(self)
+		self.update_last_execution()
 
 		if count >= 2:
 			# Upload the file
