@@ -340,14 +340,14 @@ class SlackInterfacer(object):
 	def update_last_execution(self):
 		channel = self.channel
 		is_manual_request = self.is_manual_request
-	    if is_manual_request:
-		return
-	    cur = sql_conn.cursor()
-	    current_date = datetime.date.today().strftime( "%m-%d-%Y")
-	    print("Creating execution record for %s on %s".format(channel, current_date))
-	    cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s);", [channel, current_date])
-	    sql_conn.commit()
-	    cur.close()
+		if is_manual_request:
+			return
+		cur = sql_conn.cursor()
+		current_date = datetime.date.today().strftime( "%m-%d-%Y")
+		print("Creating execution record for %s on %s".format(channel, current_date))
+		cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s);", [channel, current_date])
+		sql_conn.commit()
+		cur.close()
 
 	def notify_subscribers(self, url="null"):
 		print("Notifying subscribers")
