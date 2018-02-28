@@ -217,7 +217,7 @@ def weekly_process_rest():
     if posting_channel is None:
         posting_channel = SLACK_POSTING_CHANNEL
 
-    print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
+    print("Weekly job running for channel {} and target channel {} at time {}".format(channel, posting_channel, dt.datetime.now()))
     weekly_process(channel, posting_channel)
     return ""
 
