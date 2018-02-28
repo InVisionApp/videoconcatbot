@@ -165,10 +165,10 @@ def unsubscribe(subscriber, channel):
 def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
 	schedule.clear(tag)
-        schedule.every().saturday.at("10:00").do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
+	schedule.every().saturday.at("10:00").do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
 
 def weekly_process(channel, posting_channel):
-    print("Weekly job running for channel {} and postin results in {} at time {}".format(channel, posting_channel, dt.datetime.now()))
+    print("Weekly job running for channel {} and posting results in {} at time {}".format(channel, posting_channel, dt.datetime.now()))
     start_time = get_last_execution(channel)
     if start_time is None:
         now = int(time.time())
