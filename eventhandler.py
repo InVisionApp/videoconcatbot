@@ -214,8 +214,8 @@ def weekly_process_rest():
     channel = request.args.get('channel')
     posting_channel = request.args.get('target_channel')
 
-	if posting_channel is None:
-		posting_channel = SLACK_POSTING_CHANNEL
+    if posting_channel is None:
+        posting_channel = SLACK_POSTING_CHANNEL
 
     print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
     weekly_process(channel, posting_channel)
