@@ -275,7 +275,7 @@ class SlackInterfacer(object):
 
 			self.notify_subscribers(soloURL)
 		else:
-			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.channel, self.channel_name)
+			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.posting_channel, self.posting_channel_name)
 			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=noVidMessage)
 
 			self.notify_subscribers()
