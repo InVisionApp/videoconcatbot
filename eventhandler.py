@@ -180,7 +180,7 @@ def weekly_process(channel, posting_channel):
     weeklyTask = {
         'channel':channel,
         'start': start_time,
-		'posting_channel': posting_channel
+        'posting_channel': posting_channel
     }
     print("weekly task {}".format(weeklyTask))
     createQueue(weeklyTask)

@@ -226,8 +226,7 @@ class SlackInterfacer(object):
 
 	# Posts the appropriate message to the slack channel
 	def post_video(self, concatFilePath, originalMetadata):
-		print("Posting vide: {} to {}".format(concatFilePath, self.posting_channel_name))
-		print("POSTING: " + concatFilePath)
+		print("Posting video: {} to {}".format(concatFilePath, self.posting_channel_name))
 
 		videos = originalMetadata['saved_videos']
 		count = len(videos)
