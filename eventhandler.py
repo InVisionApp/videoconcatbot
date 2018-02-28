@@ -39,6 +39,7 @@ emojiReactions = ['thumbsup', 'raised_hands', 'clap', 'ok_hand']
 SLACK_VERIFICATION_TOKEN = os.environ["SLACK_VERIFICATION_TOKEN"]
 SLACK_BOT_TOKEN = os.environ["SLACK_BOT_TOKEN"]
 SLACK_APP_TOKEN = os.environ["SLACK_APP_TOKEN"]
+SLACK_POSTING_CHANNEL = os.environ["SLACK_POSTING_CHANNEL"]
 
 slack_bot_client = SlackClient(SLACK_BOT_TOKEN)
 
@@ -164,10 +165,10 @@ def unsubscribe(subscriber, channel):
 def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
 	schedule.clear(tag)
-        schedule.every().friday.at("21:00").do(weekly_process, channel).tag(tag) # Hour 20:00 UTC is 13:00/1:00PM PST
+        schedule.every().saturday.at("10:00").do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
 
-def weekly_process(channel):
-    print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
+def weekly_process(channel, posting_channel):
+    print("Weekly job running for channel {} and postin results in {} at time {}".format(channel, posting_channel, dt.datetime.now()))
     start_time = get_last_execution(channel)
     if start_time is None:
         now = int(time.time())
@@ -178,7 +179,8 @@ def weekly_process(channel):
 
     weeklyTask = {
         'channel':channel,
-        'start': start_time
+        'start': start_time,
+		'posting_channel': posting_channel
     }
     print("weekly task {}".format(weeklyTask))
     createQueue(weeklyTask)
@@ -210,8 +212,9 @@ def starter():
 @app.route("/run-schedule", methods=['GET'])
 def weekly_process_rest():
     channel = request.args.get('channel')
+    posting_channel = SLACK_POSTING_CHANNEL
     print("Weekly job running for channel {} at time {}".format(channel, dt.datetime.now()))
-    weekly_process(channel)
+    weekly_process(channel, posting_channel)
     return ""
 
 @app.route("/slack/events", methods=['GET', 'POST'])
@@ -280,6 +283,7 @@ def concat_slash_command():
 	if data.get('token') == SLACK_VERIFICATION_TOKEN:
 
 		channel = data.get('channel_id')
+		posting_channel = SLACK_POSTING_CHANNEL
 		text = data.get('text')
 		user = data.get('user_id')
 
@@ -312,6 +316,7 @@ def concat_slash_command():
 		endUnix = time.mktime(end.timetuple())
 		concatRequest = {
 			'channel':channel,
+			'posting_channel': posting_channel,
 			'start':startUnix,
 			'end':endUnix,
 			'user':user,
@@ -441,7 +446,12 @@ def demo_channel():
 	data = request.values
 	if data.get('token') == SLACK_VERIFICATION_TOKEN:
 		channel = data.get('channel_id')
-		weekly_process(channel)
+		posting_channel = data.get('tartget_channel')
+
+		if posting_channel is None:
+			posting_channel = SLACK_POSTING_CHANNEL
+
+		weekly_process(channel, posting_channel)
 	return "mkay"
 
 # This doesn't run when on Heroku

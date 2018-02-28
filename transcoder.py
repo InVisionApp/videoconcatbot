@@ -44,11 +44,13 @@ class SlackInterfacer(object):
 	slack_bot_client = SlackClient(SLACK_BOT_TOKEN)
 	slack_app_client = SlackClient(SLACK_APP_TOKEN) # used to call the 'files.list' command
 
-	def __init__(self, channel, unique_id, manual_request):
+	def __init__(self, channel, posting_channel, unique_id, manual_request):
 		super(SlackInterfacer, self).__init__()
 		self.BOT_ID = self.getBotID()
 		self.channel = channel
 		self.channel_name = self.name_of_channel(channel)
+		self.posting_channel = posting_channel
+		self.posting_channel_name = self.name_of_channel(posting_channel)
 		self.unique_id = unique_id
 		self.is_manual_request = manual_request
 
@@ -224,6 +226,7 @@ class SlackInterfacer(object):
 
 	# Posts the appropriate message to the slack channel
 	def post_video(self, concatFilePath, originalMetadata):
+		print("Posting vide: {} to {}".format(concatFilePath, self.posting_channel_name))
 		print("POSTING: " + concatFilePath)
 
 		videos = originalMetadata['saved_videos']
@@ -235,7 +238,7 @@ class SlackInterfacer(object):
 		if count >= 2:
 			# Upload the file
 			print("Uploading concatenated video to slack")
-			result = self.upload_file_to_slack(concatFilePath, self.channel)
+			result = self.upload_file_to_slack(concatFilePath, self.posting_channel)
 			uploadedFileID = result[0]
 			uploadedFileLink = result[1]
 			if uploadedFileID:
@@ -657,6 +660,7 @@ class AWSConcatenator(object):
 def run_process(request):
 	# Setup
 	channel = request.get('channel')
+	posting_channel = request.get('posting_channel')
 	user = request.get('user')
 	searchStartTime = request.get('start')
 	searchEndTime = request.get('end')
@@ -668,7 +672,7 @@ def run_process(request):
 	JOB_ID = uuid.uuid1()
 
 	# Download video files within range from slack
-	slack = SlackInterfacer(channel, JOB_ID, manualRequest)
+	slack = SlackInterfacer(channel, posting_channel, JOB_ID, manualRequest)
 	channelFileData = slack.download_slack_videos(searchStartTime, searchEndTime)
 	savedVideos = channelFileData['saved_videos']
 
