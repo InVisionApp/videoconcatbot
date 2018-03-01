@@ -271,7 +271,7 @@ class SlackInterfacer(object):
 
 			soloURL = vid['url']
 			soloVidMessage = "<@{}> posted the only demo video this week!\n{}".format(loneUploader, soloURL)
-			self.slack_bot_client.api_call("chat.postMessage", channel=self.channel, text=soloVidMessage)
+			self.slack_bot_client.api_call("chat.postMessage", channel=self.posting_channel, text=soloVidMessage)
 
 			self.notify_subscribers(soloURL)
 		else:
