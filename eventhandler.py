@@ -450,7 +450,7 @@ def demo_channel():
 	data = request.values
 	if data.get('token') == SLACK_VERIFICATION_TOKEN:
 		channel = data.get('channel_id')
-		posting_channel = data.get('tartget_channel')
+		posting_channel = data.get('target_channel')
 
 		if posting_channel is None:
 			posting_channel = SLACK_POSTING_CHANNEL
