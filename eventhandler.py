@@ -465,4 +465,4 @@ def demo_channel():
 # This doesn't run when on Heroku
 if __name__ == "__main__":
 	# Runs Flask on local environments for testing.
-	app.run(port=4567, use_realoader=False)
+	app.run(port=4567)
