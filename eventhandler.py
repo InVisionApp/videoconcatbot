@@ -164,7 +164,7 @@ def unsubscribe(subscriber, channel):
 # Set the weekly job for a given channel
 def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
-	print(tag)
+	print('tag: {}'.format(tag))
 	schedule.clear(tag)
 	# schedule.every().saturday.at("10:00").do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
 	schedule.every(5).minutes.do(print_message, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
