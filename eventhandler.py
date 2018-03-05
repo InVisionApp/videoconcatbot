@@ -165,7 +165,11 @@ def unsubscribe(subscriber, channel):
 def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
 	schedule.clear(tag)
-	schedule.every().saturday.at("10:00").do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
+	# schedule.every().saturday.at("10:00").do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
+	schedule.every(5).minutes.do(print_message, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
+
+def print_message(channel, posting_channel):
+    print("concatenating videos in {} posting to {}".format(channel, posting_channel))
 
 def weekly_process(channel, posting_channel):
     print("Weekly job running for channel {} and posting results in {} at time {}".format(channel, posting_channel, dt.datetime.now()))
@@ -461,4 +465,4 @@ def demo_channel():
 # This doesn't run when on Heroku
 if __name__ == "__main__":
 	# Runs Flask on local environments for testing.
-	app.run(port=4567)
+	app.run(port=4567, use_realoader=false)
