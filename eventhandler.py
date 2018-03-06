@@ -164,13 +164,9 @@ def unsubscribe(subscriber, channel):
 # Set the weekly job for a given channel
 def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
-	print('tag: {}'.format(tag))
 	schedule.clear(tag)
-	schedule.every(2).minutes.do(print_message, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
+	schedule.every(2).minutes.do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
 	# schedule.every().saturday.at("10:00").do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
-
-def print_message(channel, posting_channel):
-    print("concatenating videos in {} posting to {}".format(channel, posting_channel))
 
 def weekly_process(channel, posting_channel):
     print("Weekly job running for channel {} and posting results in {} at time {}".format(channel, posting_channel, dt.datetime.now()))
@@ -188,7 +184,7 @@ def weekly_process(channel, posting_channel):
         'posting_channel': posting_channel
     }
     print("weekly task {}".format(weeklyTask))
-    createQueue(weeklyTask)
+    # createQueue(weeklyTask)
 
 # Runs an infinite loop to check if it's time to run a scheduled job
 def schedule_loop():
