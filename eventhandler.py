@@ -166,7 +166,7 @@ def schedule_weekly(channel):
 	tag = '{}-weekly'.format(channel)
 	print('tag: {}'.format(tag))
 	schedule.clear(tag)
-	schedule.every(5).minutes.do(print_message, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
+	schedule.every(2).minutes.do(print_message, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
 	# schedule.every().saturday.at("10:00").do(weekly_process, channel, SLACK_POSTING_CHANNEL).tag(tag) # Hour 10:00 UTC is 02:00AM PST
 
 def print_message(channel, posting_channel):
