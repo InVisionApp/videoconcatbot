@@ -359,7 +359,7 @@ class SlackInterfacer(object):
 		print("subs are {}".format(subscribers))
 
 		if url == "null":
-			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.channel, self.channel_name)
+			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.posting_channel, self.posting_channel_name)
 			for sub in subscribers:
 				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=noVidMessage)
 		else:
