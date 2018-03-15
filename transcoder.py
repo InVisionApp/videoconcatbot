@@ -270,12 +270,12 @@ class SlackInterfacer(object):
 				loneUploader = vid['user']
 
 			soloURL = vid['url']
-			soloVidMessage = "<@{}> posted the only demo video this week!\n{}".format(loneUploader, soloURL)
+			soloVidMessage = "<@{}> posted the only demo video this week in <#{}|{}>!\n{}".format(loneUploader, self.channel, self.channel_name, soloURL)
 			self.slack_bot_client.api_call("chat.postMessage", channel=self.posting_channel, text=soloVidMessage)
 
 			self.notify_subscribers(soloURL)
 		else:
-			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.posting_channel, self.posting_channel_name)
+			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.channel, self.channel_name)
 			self.slack_bot_client.api_call("chat.postMessage", channel=self.posting_channel, text=noVidMessage)
 
 			self.notify_subscribers()
@@ -359,7 +359,7 @@ class SlackInterfacer(object):
 		print("subs are {}".format(subscribers))
 
 		if url == "null":
-			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.posting_channel, self.posting_channel_name)
+			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.channel, self.channel_name)
 			for sub in subscribers:
 				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=noVidMessage)
 		else:
