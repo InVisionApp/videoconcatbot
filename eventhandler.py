@@ -183,6 +183,7 @@ def weekly_process(channel, posting_channel):
         'start': start_time,
         'posting_channel': posting_channel
     }
+    print("Enqueuing job for scheduled job with payload: {}".format(weeklyTask))
     createQueue(weeklyTask)
 
 # Runs an infinite loop to check if it's time to run a scheduled job
@@ -277,6 +278,7 @@ def createQueue(request):
 	channel = request.get('channel')
 	
 	# Throw the entire concatenation process in a background queue so as not to interrupt the webserver
+	print("Enqueuing call for {}".format(channel))
 	q.enqueue_call(
 		func=run_process,
 		args=(request,),
@@ -329,6 +331,7 @@ def concat_slash_command():
 			'user':user,
 			'manual_request':True
 		}
+		print("Enqueuing job for /concat with payload: {}".format(concatRequest))
 		createQueue(concatRequest)
 
 		return "I'll concatenate videos posted between *{}* and *{}* and will DM you when I'm done.\nThis can take several minutes.".format(dates[0], dates[1])
