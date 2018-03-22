@@ -1,2 +1,2 @@
-web: gunicorn eventhandler:app
+web: gunicorn --workers=1 eventhandler:app
 worker: python worker.py
