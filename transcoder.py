@@ -706,4 +706,4 @@ def run_process(request):
 		try:
 			concatenator.delete_from_s3(uploaded, key)
 		except:
-			print("Error deleting the resource from S3", sys.exc_info()[0])
+			print("Error deleting the resource from S3")
