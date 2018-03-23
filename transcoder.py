@@ -360,12 +360,12 @@ class SlackInterfacer(object):
 
 		if url == "null":
 			noVidMessage = "There were no demo videos posted this week in <#{}|{}>. :speak_no_evil:".format(self.channel, self.channel_name)
-			# for sub in subscribers:
-			# 	self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=noVidMessage)
+			for sub in subscribers:
+				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=noVidMessage)
 		else:
 			notification = "I hope you got some :popcorn: ready because here are this week's videos from <#{}|{}>\n{}!".format(self.channel, self.channel_name, url)
-			# for sub in subscribers:
-			# 	self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)
+			for sub in subscribers:
+				self.slack_bot_client.api_call("chat.postMessage", channel=sub, text=notification)
 
 #******************************************************************************#
 
