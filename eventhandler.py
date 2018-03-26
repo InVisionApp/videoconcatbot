@@ -232,6 +232,7 @@ def parse_event():
 	if data.get('token') == SLACK_VERIFICATION_TOKEN:
 		event = data.get('event')
 		if event:
+			print("event {}".format(event))
 			channel = event.get('channel')
 			print("This channel is " + str(channel))
 
