@@ -124,9 +124,7 @@ class SlackInterfacer(object):
 			for f in files:
 				# We're only interested in demos not uploaded by the videobot itself
 				video_url = f['url_private_download']
-				print("url_private_download {} {} {}".format(video_url, f['user'] != self.BOT_ID, video_url not in deleted_files))
 				if f['user'] != self.BOT_ID and (video_url not in deleted_files):
-					print("adding to concat: {} ".format(video_url))
 					downloadedVideo = self.download_source_file(f)
 					if downloadedVideo['accepted']:
 						videos.append(downloadedVideo)
