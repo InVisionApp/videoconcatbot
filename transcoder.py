@@ -118,10 +118,11 @@ class SlackInterfacer(object):
 
 			videos = []
 			unaccepted = []
+			deleted_files = self.get_deleted_files()
 
 			for f in files:
 				# We're only interested in demos not uploaded by the videobot itself
-				if f['user'] != self.BOT_ID:
+				if f['user'] != self.BOT_ID and f['url_private_download'] not in deleted_files:
 					downloadedVideo = self.download_source_file(f)
 					if downloadedVideo['accepted']:
 						videos.append(downloadedVideo)
@@ -352,6 +353,18 @@ class SlackInterfacer(object):
 		cur.execute("INSERT INTO concat_executions (channel_id, exec_date) VALUES(%s, %s);", [channel, current_date])
 		sql_conn.commit()
 		cur.close()
+
+	def get_deleted_files(self):
+		channel = self.channel
+		cur = sql_conn.cursor()
+		cur.execute("CREATE TABLE IF NOT EXISTS deleted_files(channel_id TEXT, file_url TEXT);")
+		cur.execute("SELECT file_url FROM deleted_files WHERE channel_id=%s;", [channel])
+		deleted_files_list = []
+		for tple in cur.fetchall():
+			deleted_files_list.append(tple[0])
+		cur.close()
+		return deleted_files_list
+
 
 	def notify_subscribers(self, url="null"):
 		print("Notifying subscribers")

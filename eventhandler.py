@@ -64,6 +64,13 @@ def get_botID():
 		print("could not find bot user with the name " + bot_name)
 		return False
 
+def add_deleted_file(channel, file_identifier):
+    cur = sql_conn.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS deleted_files(channel_id TEXT, file_url TEXT);")
+    cur.execute("INSERT INTO deleted_files VALUES (%s, %s);", [channel, file_identifier])
+    sql_conn.commit()
+    cur.close()
+
 def get_last_execution(channel):
     cur = sql_conn.cursor()
     cur.execute("CREATE TABLE IF NOT EXISTS concat_executions (channel_id TEXT, exec_date DATE);")
@@ -266,6 +273,13 @@ def parse_event():
 					print("Reaction :{}: added to {}".format(reaction, file['name']))
 				else:
 					print("Error while adding reaction :{}: to {}".format(reaction, file['name']))
+			elif event.get('subtype') == 'message_deleted' and event.get('user') != BOT_ID:
+				# A message has been deleted and need to check if it contained a file
+				previous_message = event.get('previous_message')
+				deleted_file = previous_message.get('file')
+				if deleted_file:
+					file_identifier = deleted_file.get('url_private_download')
+					add_deleted_file(channel, file_identifier)
 	else:
 		print("Invalid token received from Slack")
 
