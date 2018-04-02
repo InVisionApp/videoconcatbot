@@ -439,6 +439,7 @@ def list_slash_command():
 		for ch in allChannels:
 			channelName = name_of_channel(ch)
 			response += " <#{}|{}>".format(ch, channelName)
+		response += " and posting concatenated videos to  <#{}|{}>".format(SLACK_POSTING_CHANNEL, name_of_channel(SLACK_POSTING_CHANNEL))
 
 		return response
 	else:
