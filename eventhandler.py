@@ -139,7 +139,7 @@ def get_subscribers(channel):
 	for tple in cur.fetchall():
 		subs.append(tple[0])
 
-	cur.close()	
+	cur.close()
 	return subs
 
 def subscribe(subscriber, channel):
@@ -276,10 +276,11 @@ def parse_event():
 			elif event.get('subtype') == 'message_deleted' and event.get('user') != BOT_ID:
 				# A message has been deleted and need to check if it contained a file
 				previous_message = event.get('previous_message')
-				deleted_file = previous_message.get('file')
-				if deleted_file:
-					file_identifier = deleted_file.get('url_private_download')
-					add_deleted_file(channel, file_identifier)
+				if previous_message:
+					deleted_file = previous_message.get('file')
+					if deleted_file:
+						file_identifier = deleted_file.get('url_private_download')
+						add_deleted_file(channel, file_identifier)
 	else:
 		print("Invalid token received from Slack")
 
@@ -291,7 +292,7 @@ def print_request(request):
 # This function enqueues a video concat request to be handled by the worker
 def createQueue(request):
 	channel = request.get('channel')
-	
+
 	# Throw the entire concatenation process in a background queue so as not to interrupt the webserver
 	print("Enqueuing call for {}".format(channel))
 	q.enqueue_call(
