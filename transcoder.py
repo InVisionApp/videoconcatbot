@@ -123,7 +123,7 @@ class SlackInterfacer(object):
 
 			for f in files:
 				# We're only interested in demos not uploaded by the videobot itself
-				if 'url_private_download' not in video_url:
+				if 'url_private_download' not in f:
 					continue
 				video_url = f['url_private_download']
 				if f['user'] != self.BOT_ID and (video_url not in deleted_files):
