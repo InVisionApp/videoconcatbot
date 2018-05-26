@@ -188,6 +188,7 @@ def weekly_process(channel, posting_channel):
     weeklyTask = {
         'channel':channel,
         'start': start_time,
+        'end': time.time(),
         'posting_channel': posting_channel
     }
     print("Enqueuing job for scheduled job with payload: {}".format(weeklyTask))
