@@ -126,7 +126,7 @@ class SlackInterfacer(object):
 				if 'url_private_download' not in f:
 					continue
 				video_url = f['url_private_download']
-				if f['user'] != self.BOT_ID and (video_url not in deleted_files):
+				if f['user'] != self.BOT_ID:
 					downloadedVideo = self.download_source_file(f)
 					if downloadedVideo['accepted']:
 						videos.append(downloadedVideo)
