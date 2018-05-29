@@ -46,9 +46,8 @@ slack_bot_client = SlackClient(SLACK_BOT_TOKEN)
 invalid_verification_message = "Error: Invalid Slack Authentication."
 
 app = Flask(__name__)
-print(__name__)
 
-if __name__ == '__main__':
+if __name__ == 'eventhandler':
     print('application started')
 
 def get_botID():
