@@ -47,9 +47,6 @@ invalid_verification_message = "Error: Invalid Slack Authentication."
 
 app = Flask(__name__)
 
-if __name__ == 'eventhandler':
-    starter()
-
 def get_botID():
 	bot_name = 'videobot'
 
@@ -489,3 +486,7 @@ def demo_channel():
 if __name__ == "__main__":
 	# Runs Flask on local environments for testing.
 	app.run(port=4567)
+
+if __name__ == 'eventhandler':
+    starter()
+
