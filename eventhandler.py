@@ -48,7 +48,7 @@ invalid_verification_message = "Error: Invalid Slack Authentication."
 app = Flask(__name__)
 
 if __name__ == 'eventhandler':
-    print('application started')
+    starter()
 
 def get_botID():
 	bot_name = 'videobot'
@@ -208,7 +208,7 @@ def schedule_loop():
 def index():
 	return "Hey this is the Video Concatenator add me to your slack channel."
 
-@app.before_first_request
+# @app.before_first_request
 def starter():
 	print("Running before first request")
 
