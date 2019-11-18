@@ -17,7 +17,7 @@ pyee==3.0.3
 python-dateutil==2.6.1
 python-magic==0.4.13
 redis==2.10.5
-requests==2.18.3
+requests==2.20.0
 rq==0.8.1
 s3transfer==0.1.10
 schedule==0.4.3
