@@ -1,3 +1,6 @@
+# Deprecated
+This app has been disabled from all channels it used to work in and it has also been uninstalled from the InVisionApp Slack workspace.
+
 # InVision Slack Video Concatenator
 
 The Video Concatenator is a bot for Slack that concatenates all the videos posted in a channel on a weekly basis. It also enables users to manually concatenate videos all the videos from a channel within a specified time range.
